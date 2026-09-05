@@ -78,8 +78,10 @@ export default function LaunchView({ onFullscreen }: { onFullscreen: () => void 
           <button className="tool" aria-label="从头开始发射演示" title="从头开始" onClick={() => { seek(0); scene.current?.reset(); }}><RotateCcw size={17}/></button>
         </div>
         <div className="launch-options"><label className="toggle"><input type="checkbox" checked={following} onChange={e => setFollowing(e.target.checked)}/><span className="switch"/><span>跟随镜头</span></label><label className="launch-speed"><span>播放速度</span><select value={rate} onChange={e => setRate(Number(e.target.value))} aria-label="发射演示播放速度"><option value="0.5">0.5 倍</option><option value="1">1 倍</option><option value="2">2 倍</option></select></label><div className="launch-audio"><button className="tool" aria-label="中文语音解说" aria-pressed={narration} disabled={!audioAvailable} title={audioAvailable ? '中文语音解说' : '此部署尚未生成解说音频'} onClick={() => setNarration(v => !v)}>{narration ? <Volume2 size={17}/> : <VolumeX size={17}/>}</button><select className="narrator-select" aria-label="解说音色" value={voice} disabled={!audioAvailable} onChange={e => setVoice(e.target.value as Narrator)}><option value="yunxi">云希 · 男声</option><option value="xiaoxiao">晓晓 · 女声</option></select><button className="tool" aria-label="解说字幕" aria-pressed={captions} title="解说字幕" onClick={() => setCaptions(v => !v)}><Captions size={18}/></button></div><span className="launch-duration">流程重建 · 02:46</span></div>
-        {speech.loading && !speech.failed && <p className="launch-speech-error" role="status">解说音频缓冲中…</p>}
-        {speech.failed && <p className="launch-speech-error" role="status">解说音频未能播放，字幕仍可用。<button onClick={() => setNarration(false)}>关闭解说</button></p>}
+        <div className="launch-speech-status" role="status" aria-atomic="true">
+          <span>{speech.failed ? '解说音频未能播放，字幕仍可用。' : speech.loading ? '解说音频缓冲中…' : ''}</span>
+          {speech.failed && <button onClick={() => setNarration(false)}>关闭解说</button>}
+        </div>
       </div>
     </div>
   </section>;

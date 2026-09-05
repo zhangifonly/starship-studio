@@ -137,7 +137,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
     const starMaterial = new THREE.PointsMaterial({ color: '#dce9ed', size: 1.5, sizeAttenuation: false, transparent: true, opacity: 0 }); scene.add(new THREE.Points(starsGeometry, starMaterial));
     let resetRequested = true, zoom = 1, disposed = false, frameId = 0;
-    let width = 1, height = 1;
+    let width = 1, height = 1, pendingWidth = 0, pendingHeight = 0;
     const target = new THREE.Vector3(), desiredPosition = new THREE.Vector3(), offset = new THREE.Vector3();
     const normalSky = new THREE.Color('#8cabb7'), spaceSky = new THREE.Color('#080d17');
     const fog = new THREE.FogExp2(normalSky, .003); scene.fog = fog;
@@ -145,12 +145,16 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     ground.traverse(o => { if (o instanceof THREE.Mesh && o !== smoke) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.transparent = true; groundMaterials.add(m); }); });
     api.current = { reset() { resetRequested = true; zoom = 1; }, zoom(f) { zoom = THREE.MathUtils.clamp(zoom * f, .6, 2.2); if (!latest.current.following) camera.position.sub(controls.target).multiplyScalar(f).add(controls.target); } };
     const observer = new ResizeObserver(() => {
-      width = el.clientWidth; height = el.clientHeight; if (!width || !height) return;
-      camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); resetRequested = true;
+      pendingWidth = el.clientWidth; pendingHeight = el.clientHeight;
     }); observer.observe(el);
     const lost = (event: Event) => { event.preventDefault(); setError(true); latest.current.onError(); }; renderer.domElement.addEventListener('webglcontextlost', lost);
     function frame() {
       if (disposed) return; frameId = requestAnimationFrame(frame); if (document.hidden) return;
+      // Resizing clears the drawing buffer; redraw it in this same frame.
+      if (pendingWidth > 0 && pendingHeight > 0 && (pendingWidth !== width || pendingHeight !== height)) {
+        width = pendingWidth; height = pendingHeight;
+        camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); resetRequested = true;
+      }
       const p = latest.current, state = launchState(p.time), t = state.time;
       booster.position.set(state.booster.x, state.booster.y, 0); booster.rotation.z = state.booster.angle;
       ship.position.set(state.ship.x, state.ship.y, 0); ship.rotation.z = state.ship.angle;

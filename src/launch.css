@@ -40,7 +40,10 @@
 .launch-audio { display: flex; align-items: center; gap: 5px; }.launch-audio .tool { width: 29px; height: 29px; }.launch-audio .tool[aria-pressed=true] { background: #30412a; color: #d0eaa8; }
 .narrator-select { max-width: 110px; padding: 5px 3px; background: #1d2b21; color: #c8dcb7; border: 1px solid #3b5038; border-radius: 3px; font-size: 11px; }
 .launch-options { flex-wrap: wrap; row-gap: 8px; }
-.launch-speech-error { color: #dfbda2; font-size: 10px; margin: 8px 0 0; }
+/* Audio state changes must not resize the WebGL viewport above the controls. */
+.launch-speech-status { display: flex; align-items: center; gap: 8px; height: 28px; margin-top: 6px; color: #dfbda2; font-size: 10px; line-height: 14px; }
+.launch-speech-status > span { min-width: 0; }
+.launch-speech-status > button { flex-shrink: 0; white-space: nowrap; color: #d0eaa8; }
 .launch-stage-caption.with-narration { max-width: min(440px, calc(100% - 105px)); }.launch-stage-caption.with-narration p { line-height: 1.8; }
 .launch-map-key { position: absolute; bottom: 47px; right: 23px; display: flex; gap: 15px; font-size: 10px; color: #cee89b; }.launch-map-key span + span { color: #ffc489; }.launch-map-key span::before { content: ''; display: inline-block; width: 16px; height: 1px; background: currentColor; vertical-align: middle; margin-right: 5px; }
 @media (max-height: 850px) and (min-width: 701px) { .launch-intro { padding: 22px 23px; }.launch-intro .version-badge { display: none; }.launch-phases { padding: 12px 0; }.launch-phases button { padding-top: 10px; padding-bottom: 10px; }.launch-phase-detail { padding-top: 17px; }.launch-phase-detail dl { display: none; }.launch-controls { padding-top: 16px; padding-bottom: 13px; } }
