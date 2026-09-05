@@ -1,0 +1,136 @@
+{
+  "provider": "Microsoft Edge TTS",
+  "voices": {
+    "yunxi": "zh-CN-YunxiNeural",
+    "xiaoxiao": "zh-CN-XiaoxiaoNeural"
+  },
+  "rate": "+0%",
+  "volume": "+0%",
+  "pitch": "+0Hz",
+  "audio": {
+    "yunxi": [
+      {
+        "src": "/narration/yunxi/phase-01-8a9a4d444b54.mp3",
+        "duration": 5.184,
+        "text": "星舰即将出发，一起观察两级火箭的飞行与返回。"
+      },
+      {
+        "src": "/narration/yunxi/phase-02-72369176e337.mp3",
+        "duration": 4.704,
+        "text": "猛禽发动机启动，推力建立，即将离塔。"
+      },
+      {
+        "src": "/narration/yunxi/phase-03-72663cec2114.mp3",
+        "duration": 8.808,
+        "text": "火箭起飞。超级重型助推器承担初始爬升任务，把星舰带向更高、更快的飞行状态。"
+      },
+      {
+        "src": "/narration/yunxi/phase-04-b470e45df3c5.mp3",
+        "duration": 10.248,
+        "text": "飞行方向逐渐转向。火箭不仅需要飞得高，还需要获得足够的水平速度。此处的时间与航程经过压缩。"
+      },
+      {
+        "src": "/narration/yunxi/phase-05-83c424c85413.mp3",
+        "duration": 8.448,
+        "text": "星舰发动机先点火，随后两级分离。星舰继续加速，助推器则准备返回发射场。"
+      },
+      {
+        "src": "/narration/yunxi/phase-06-985e0eecbc33.mp3",
+        "duration": 11.688,
+        "text": "现在跟随助推器。它调整姿态并进行返航点火，改变速度方向，驶向发射场。与此同时，星舰仍在继续飞行。"
+      },
+      {
+        "src": "/narration/yunxi/phase-07-6b524683ddf4.mp3",
+        "duration": 8.136,
+        "text": "助推器接近发射场。栅格翼帮助控制姿态，着陆点火则逐步减小下降速度。"
+      },
+      {
+        "src": "/narration/yunxi/phase-08-cc346bb35359.mp3",
+        "duration": 10.248,
+        "text": "助推器进入机械臂之间。速度降下来后，塔架承接箭体，发动机关机。这是助推器回收的关键一步。"
+      },
+      {
+        "src": "/narration/yunxi/phase-09-e954cb6174b7.mp3",
+        "duration": 10.344,
+        "text": "镜头回到星舰。地球的云层和大气边缘在下方展开。星舰进入滑行阶段，并准备后续的再入过程。"
+      },
+      {
+        "src": "/narration/yunxi/phase-10-09017bfafa1a.mp3",
+        "duration": 11.472,
+        "text": "星舰重新进入稠密大气。热防护面迎向来流，周围出现高温辉光。襟翼调整姿态，帮助星舰通过空气阻力减速。"
+      },
+      {
+        "src": "/narration/yunxi/phase-11-d807f168b264.mp3",
+        "duration": 9.984,
+        "text": "接近海面时，星舰重启发动机并翻转至接近竖直的姿态。推力进一步减小下降速度，准备接触水面。"
+      },
+      {
+        "src": "/narration/yunxi/phase-12-fdd03146149a.mp3",
+        "duration": 11.04,
+        "text": "星舰接触海面，发动机关机。本次流程演示结束。海面着陆不等于打捞后复用，也不同于助推器的塔架捕获。"
+      }
+    ],
+    "xiaoxiao": [
+      {
+        "src": "/narration/xiaoxiao/phase-01-8a681908caed.mp3",
+        "duration": 5.04,
+        "text": "星舰即将出发，一起观察两级火箭的飞行与返回。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-02-85d7e27aea59.mp3",
+        "duration": 4.368,
+        "text": "猛禽发动机启动，推力建立，即将离塔。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-03-9f03e8d5794a.mp3",
+        "duration": 8.904,
+        "text": "火箭起飞。超级重型助推器承担初始爬升任务，把星舰带向更高、更快的飞行状态。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-04-0d67067e3ba0.mp3",
+        "duration": 10.44,
+        "text": "飞行方向逐渐转向。火箭不仅需要飞得高，还需要获得足够的水平速度。此处的时间与航程经过压缩。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-05-234ec7a11052.mp3",
+        "duration": 8.52,
+        "text": "星舰发动机先点火，随后两级分离。星舰继续加速，助推器则准备返回发射场。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-06-9be0070f0d7a.mp3",
+        "duration": 11.664,
+        "text": "现在跟随助推器。它调整姿态并进行返航点火，改变速度方向，驶向发射场。与此同时，星舰仍在继续飞行。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-07-be7ef06b4f2c.mp3",
+        "duration": 8.064,
+        "text": "助推器接近发射场。栅格翼帮助控制姿态，着陆点火则逐步减小下降速度。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-08-2dfa6d4e9ec5.mp3",
+        "duration": 10.176,
+        "text": "助推器进入机械臂之间。速度降下来后，塔架承接箭体，发动机关机。这是助推器回收的关键一步。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-09-987abee988b4.mp3",
+        "duration": 10.392,
+        "text": "镜头回到星舰。地球的云层和大气边缘在下方展开。星舰进入滑行阶段，并准备后续的再入过程。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-10-045540e056d0.mp3",
+        "duration": 11.784,
+        "text": "星舰重新进入稠密大气。热防护面迎向来流，周围出现高温辉光。襟翼调整姿态，帮助星舰通过空气阻力减速。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-11-1baec1682572.mp3",
+        "duration": 10.176,
+        "text": "接近海面时，星舰重启发动机并翻转至接近竖直的姿态。推力进一步减小下降速度，准备接触水面。"
+      },
+      {
+        "src": "/narration/xiaoxiao/phase-12-b6a3be252066.mp3",
+        "duration": 11.304,
+        "text": "星舰接触海面，发动机关机。本次流程演示结束。海面着陆不等于打捞后复用，也不同于助推器的塔架捕获。"
+      }
+    ]
+  }
+}

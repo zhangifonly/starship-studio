@@ -1,0 +1,65 @@
+.experience-tabs { display: flex; align-self: stretch; align-items: stretch; gap: 25px; }
+.experience-tabs a { display: flex; align-items: center; justify-content: center; gap: 8px; border-bottom: 2px solid transparent; color: #8b9b91; font-size: 12px; padding: 0 6px; }
+.experience-tabs a:hover { color: #e4eede; }.experience-tabs a[aria-current=page] { color: var(--accent); border-color: var(--accent); }
+.studio.launch-experience { min-height: 360px; }
+.launch-workspace { display: grid; grid-template-columns: 260px minmax(0, 1fr); flex: 1; min-height: 0; }
+.launch-sidebar { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #394b41 transparent; }
+.launch-intro { padding: 27px 23px 24px; border-bottom: 1px solid var(--line); }
+.launch-intro h1 { font-size: 24px; font-weight: 500; margin: 9px 0; }.launch-intro p { margin: 0; font-size: 11px; color: #9aaba0; }
+.launch-intro .version-badge { margin-top: 17px; }
+.launch-phases { list-style: none; padding: 17px 0; margin: 0; }
+.launch-phases button { width: 100%; display: flex; gap: 12px; align-items: center; padding: 13px 23px; border-left: 2px solid transparent; text-align: left; color: #8c9a90; }
+.launch-phases button:hover { background: #1b241f; }.launch-phases button.current { background: #25311f; border-left-color: var(--accent); color: #d5e7bd; }
+.launch-phases button > svg { margin-left: auto; width: 12px; color: #697d61; }
+.phase-step { display: grid; place-items: center; width: 23px; height: 23px; border: 1px solid #3b493d; border-radius: 50%; font-family: 'IBM Plex Mono', monospace; font-size: 9px; }
+.current .phase-step { color: #27351c; background: var(--accent); border-color: var(--accent); }.complete .phase-step { color: var(--accent); }
+.phase-name { font-size: 12px; }.phase-name small { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #70816f; margin-top: 5px; }
+.launch-phase-detail { margin: 0 24px; padding-top: 23px; border-top: 1px solid var(--line); }
+.launch-phase-detail h2 { font-size: 18px; font-weight: 500; margin: 9px 0 13px; }.launch-phase-detail p { font-size: 11px; color: #a8b5ac; line-height: 1.9; margin: 0; }
+.launch-phase-detail dl { font-size: 10px; margin: 18px 0; }.launch-phase-detail dl > div { margin-top: 15px; }.launch-phase-detail dt { color: #748775; }.launch-phase-detail dd { margin: 6px 0 0; color: #b9cdb2; line-height: 1.7; }
+.launch-disclaimer { margin: auto 24px 0; padding: 20px 0; color: #77897c; font-size: 10px; line-height: 1.8; }
+.launch-main { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.launch-scene-area { position: relative; flex: 1; min-height: 0; overflow: hidden; background: #8cabb7; }
+.launch-scene-heading { position: absolute; top: 24px; left: 25px; right: 25px; display: flex; justify-content: space-between; align-items: center; pointer-events: none; gap: 12px; }
+.launch-badge { display: flex; align-items: center; gap: 8px; font-size: 11px; background: #142526d9; color: #d9e8da; border: 1px solid #59757088; border-radius: 3px; padding: 8px 10px; }
+.launch-scene-clock { font-family: 'IBM Plex Mono', monospace; font-size: 26px; color: #fff; text-shadow: 0 1px 4px #102f36; }.launch-scene-clock small { font-size: 12px; color: #cfe1e0; }
+.launch-stage-caption { position: absolute; bottom: 28px; left: 27px; padding: 15px 18px 15px 14px; border-left: 2px solid #c3df98; color: #e7f3e9; background: #132629db; pointer-events: none; max-width: calc(100% - 115px); }
+.launch-stage-caption > span { font-size: 10px; color: #aac7b2; }.launch-stage-caption h2 { margin: 7px 0; font-size: 22px; font-weight: 500; }.launch-stage-caption p { font-size: 11px; margin: 0; color: #b7cec0; }
+.launch-tools { top: 45%; }.launch-scene-note { position: absolute; bottom: 20px; right: 23px; font-size: 9px; color: #d8e5df; text-shadow: 0 1px 4px #000; pointer-events: none; }
+.launch-controls { flex-shrink: 0; background: #101714; padding: 21px 28px 17px; border-top: 1px solid #42553a; }
+.launch-playback-row { display: flex; align-items: center; gap: 16px; }
+.launch-play { width: 42px; height: 42px; display: grid; place-items: center; background: #c4dd96; color: #25321c; border-radius: 4px; flex-shrink: 0; }.launch-play:hover { color: #152408; background: #d1e6af; }
+.launch-seek-controls { display: flex; gap: 3px; }.launch-scrubber { flex: 1; min-width: 0; position: relative; height: 42px; padding-top: 4px; }
+.launch-scrubber input { margin: 8px 0; }.launch-ticks { position: relative; margin-top: 14px; }.launch-ticks span { position: absolute; font-size: 9px; color: #7b917f; transform: translateX(-50%); white-space: nowrap; }.launch-ticks span:first-child { transform: none; }
+.launch-options { display: flex; align-items: center; gap: 27px; margin-top: 21px; }.launch-speed { display: flex; align-items: center; gap: 9px; color: #9cab9e; font-size: 11px; }.launch-speed select { background: #1d2b21; color: #c8dcb7; border: 1px solid #3b5038; border-radius: 3px; padding: 5px 7px; font-size: 11px; cursor: pointer; }.launch-duration { margin-left: auto; font-size: 10px; color: #789078; }
+.launch-sidebar { overflow: hidden; }.launch-intro { flex-shrink: 0; padding-bottom: 18px; }.launch-intro .version-badge { margin-top: 12px; }
+.launch-phases { flex: 1; min-height: 120px; overflow: auto; scrollbar-width: thin; scrollbar-color: #465742 transparent; scroll-padding: 10px; }
+.launch-phases button { padding-top: 10px; padding-bottom: 10px; }.launch-phase-detail { flex-shrink: 0; padding-top: 15px; }.launch-phase-detail dl { display: none; }.launch-phase-detail p { padding-bottom: 12px; }.launch-disclaimer { flex-shrink: 0; padding: 12px 0; }
+.launch-camera { position: absolute; top: 73px; left: 25px; display: flex; align-items: center; gap: 6px; color: #d5e7dc; background: #132527e8; border: 1px solid #607e7280; padding: 6px 8px; border-radius: 3px; }
+.launch-camera select { background: transparent; color: inherit; border: 0; font-size: 11px; max-width: 118px; cursor: pointer; }.launch-camera option { background: #14221d; }
+.launch-audio { display: flex; align-items: center; gap: 5px; }.launch-audio .tool { width: 29px; height: 29px; }.launch-audio .tool[aria-pressed=true] { background: #30412a; color: #d0eaa8; }
+.narrator-select { max-width: 110px; padding: 5px 3px; background: #1d2b21; color: #c8dcb7; border: 1px solid #3b5038; border-radius: 3px; font-size: 11px; }
+.launch-options { flex-wrap: wrap; row-gap: 8px; }
+.launch-speech-error { color: #dfbda2; font-size: 10px; margin: 8px 0 0; }
+.launch-stage-caption.with-narration { max-width: min(440px, calc(100% - 105px)); }.launch-stage-caption.with-narration p { line-height: 1.8; }
+.launch-map-key { position: absolute; bottom: 47px; right: 23px; display: flex; gap: 15px; font-size: 10px; color: #cee89b; }.launch-map-key span + span { color: #ffc489; }.launch-map-key span::before { content: ''; display: inline-block; width: 16px; height: 1px; background: currentColor; vertical-align: middle; margin-right: 5px; }
+@media (max-height: 850px) and (min-width: 701px) { .launch-intro { padding: 22px 23px; }.launch-intro .version-badge { display: none; }.launch-phases { padding: 12px 0; }.launch-phases button { padding-top: 10px; padding-bottom: 10px; }.launch-phase-detail { padding-top: 17px; }.launch-phase-detail dl { display: none; }.launch-controls { padding-top: 16px; padding-bottom: 13px; } }
+@media (max-width: 1000px) { .launch-workspace { grid-template-columns: 220px minmax(0, 1fr); }.launch-playback-row { gap: 10px; }.launch-controls { padding-left: 22px; padding-right: 22px; }.launch-seek-controls { display: none; }.launch-stage-caption h2 { font-size: 20px; } }
+@media (max-width: 1000px) {
+  .launch-tools { top: 73px; transform: none; flex-direction: row; }.launch-tools .tool { width: 27px; height: 28px; }.launch-tools .tool-divider { width: 1px; height: 18px; margin: 0 2px; }
+}
+@media (max-width: 700px) {
+  .app-header { position: relative; padding-bottom: 42px; flex-basis: 99px; }.experience-tabs { position: absolute; height: 42px; bottom: 0; left: 0; right: 0; justify-content: center; border-top: 1px solid #232e28; gap: 40px; }.experience-tabs a { font-size: 12px; min-width: 110px; }
+  .launch-workspace { display: flex; flex-direction: column; }.launch-sidebar { flex: 0 0 70px; border-right: 0; border-bottom: 1px solid #3a4d3b; overflow: hidden; }.launch-intro, .launch-phase-detail, .launch-disclaimer { display: none; }
+  .launch-phases { display: flex; flex: none; min-height: 0; padding: 0 10px; height: 70px; overflow-x: auto; scrollbar-width: none; }.launch-phases li { flex: 1; min-width: 66px; }.launch-phases button { flex-direction: column; justify-content: center; gap: 5px; padding: 8px 4px; height: 70px; border-left: 0; border-bottom: 2px solid transparent; }.launch-phases button.current { border-left: 0; border-bottom-color: var(--accent); }.launch-phases button > svg, .phase-name small { display: none; }.phase-name { font-size: 9px; white-space: nowrap; }.phase-step { width: 20px; height: 20px; font-size: 8px; }
+  .launch-main { flex: 1; }.launch-scene-heading { top: 15px; left: 17px; right: 17px; }.launch-badge { padding: 6px 8px; font-size: 10px; }.launch-scene-clock { font-size: 20px; }.launch-scene-clock small { font-size: 10px; }
+  .launch-stage-caption { left: 18px; bottom: 20px; padding: 10px 13px 10px 11px; }.launch-stage-caption > span { font-size: 9px; }.launch-stage-caption h2 { font-size: 18px; margin: 5px 0; }.launch-stage-caption p { font-size: 9px; }
+  .launch-controls { padding: 14px 19px 13px; }.launch-play { width: 36px; height: 36px; }.launch-playback-row { gap: 12px; }.launch-ticks span { font-size: 8px; }.launch-options { margin-top: 16px; gap: 17px; }.launch-options .toggle { font-size: 10px; }.launch-speed { font-size: 10px; gap: 6px; }.launch-speed select { font-size: 10px; }.launch-duration { display: none; }.launch-scene-note { font-size: 8px; right: 16px; bottom: 7px; }
+  .launch-tools { right: 15px; top: 53px; transform: none; flex-direction: row; }.launch-tools .tool { width: 27px; height: 28px; }.launch-tools .tool-divider { width: 1px; height: 18px; margin: 0 2px; }
+  .launch-camera { top: 53px; left: 17px; padding: 7px 6px; }.launch-camera select { font-size: 10px; max-width: 94px; }.launch-audio { margin-left: auto; gap: 2px; }.launch-options { gap: 12px; }.launch-speed > span { display: none; }
+  .launch-stage-caption.with-narration { max-width: calc(100% - 36px); }.launch-stage-caption.with-narration p { font-size: 10px; }.launch-map-key { bottom: 28px; right: 17px; flex-direction: column; gap: 6px; font-size: 9px; }
+}
+@media (max-height: 610px) and (min-width: 701px) { .launch-intro { padding: 15px 20px; }.launch-intro h1 { font-size: 22px; }.launch-phases button { padding: 7px 20px; }.launch-phase-detail, .launch-disclaimer { display: none; }.launch-controls { padding-top: 12px; padding-bottom: 9px; }.launch-options { margin-top: 9px; }.launch-stage-caption { bottom: 20px; } }
+@media (max-height: 450px) and (min-width: 701px) {
+  .launch-scene-heading { top: 10px; left: 14px; right: 14px; }.launch-scene-clock { font-size: 18px; }.launch-tools { top: 47px; right: 14px; }.launch-camera { top: 47px; left: 14px; }.launch-stage-caption { left: 14px; bottom: 12px; padding: 8px 10px; }.launch-stage-caption h2 { font-size: 16px; margin: 4px 0; }.launch-stage-caption p { display: none; }.launch-stage-caption.with-narration p { display: block; font-size: 9px; }.launch-stage-caption.with-narration { max-width: 220px; }.launch-stage-caption.with-narration h2 { display: none; }.launch-scene-note { bottom: 8px; right: 14px; }.launch-duration { display: none; }
+}
