@@ -4,15 +4,17 @@ import { captureState } from './mission-data.ts';
 export const FLIGHT5_EPOCH = '2024-10-13T12:25:00Z';
 export const OVERVIEW_DURATION = 200;
 export const STARBASE: GeoPoint = { lat: 25.997, lon: -97.155, altitudeM: 0 };
-export type OverviewCamera = 'global' | 'ship' | 'booster' | 'return' | 'ground';
-export const overviewCameras: { id: OverviewCamera; name: string }[] = [{ id: 'global', name: '地球总览' }, { id: 'ship', name: '上面级跟踪' }, { id: 'booster', name: '发射场区域' }, { id: 'return', name: 'B12 返回近景' }, { id: 'ground', name: 'B12 地面长焦' }];
+export type OverviewCamera = 'global' | 'ship' | 'booster' | 'return' | 'ground' | 'ship-close' | 'ship-heat';
+export const overviewCameras: { id: OverviewCamera; name: string }[] = [{ id: 'global', name: '地球总览' }, { id: 'ship', name: '上面级区域' }, { id: 'booster', name: '发射场区域' }, { id: 'return', name: 'B12 返回近景' }, { id: 'ground', name: 'B12 地面长焦' }, { id: 'ship-close', name: 'S30 伴飞近景' }, { id: 'ship-heat', name: 'S30 热盾视角' }];
 export const isReturnCamera = (camera: OverviewCamera) => camera === 'return' || camera === 'ground';
+export const isShipCamera = (camera: OverviewCamera) => camera === 'ship-close' || camera === 'ship-heat';
 export const captureClipAt = (seconds: number) => Math.max(0, Math.min(35, (seconds - 390) * 23 / 24));
 export const returnCameraAvailable = (seconds: number) => seconds >= 223;
 export const timelineSources = [
   { id: 'jsr838', name: 'Jonathan’s Space Report 838', date: '2024-10-25', url: 'https://planet4589.org/space/jsr/back/news.838.txt', scope: '飞后记录：约 69 km 分离、助推器捕获、约 212 km 远地点与约 65 分钟后溅落。正文与表格的远地点有 1 km 差异。' },
   { id: 'schedule', name: 'Flight 5 公开事件表', date: '核对于 2026-09-06', url: 'https://en.wikipedia.org/wiki/Starship_flight_test_5#Flight_timeline', scope: '二级资料中的 SpaceX 计划时间表，不视为实飞秒级遥测。动画据此安排事件；捕获精确秒数存在资料差异。' },
   { id: 'catch-report', name: 'Spaceflight Now 捕获回顾', date: '2024-11-01', url: 'https://spaceflightnow.com/2024/11/01/starship-booster-catch-brings-nasa-spacex-closer-to-artemis-3-moon-landing/', scope: '首次捕获的飞后确认；助推器约七分钟返回发射场。' },
+  { id: 'ship-design', name: 'Starship 构型记录', date: '核对于 2026-09-06', url: 'https://en.wikipedia.org/wiki/SpaceX_Starship_(spacecraft)#Design', scope: '二级资料：第一代约 50.3 m、四襟翼、三台海平面与三台真空发动机。后续代际已改前襟翼，不能直接替代 S30。尺寸和热瓦分布只作外形参考。' },
 ] as const;
 
 export const overviewEvents = [
@@ -53,7 +55,15 @@ export function guidePosition(points: readonly ControlPoint[], seconds: number):
 }
 export function flight5State(time: number) {
   const seconds = missionSecondsAt(time);
-  return { seconds, date: missionDate(seconds), separated: seconds >= 160, caught: seconds >= 414, splashed: seconds >= 3940, booster: boosterPositionAt(seconds), ship: guidePosition(shipGuide, seconds), positionKind: 'authored-interpolation' as const, measuredTelemetry: null };
+  return { seconds, date: missionDate(seconds), separated: seconds >= 160, caught: seconds >= 414, splashed: seconds >= 3940, booster: boosterPositionAt(seconds), ship: shipPositionAt(seconds), positionKind: 'authored-interpolation' as const, measuredTelemetry: null };
+}
+export function shipPositionAt(seconds: number): GeoPoint {
+  const point = guidePosition(shipGuide, seconds);
+  if (seconds < 3915 || !Number.isFinite(seconds)) return point;
+  // A decelerating terminal descent is authored for the same two guide
+  // endpoints. It is not an inferred velocity or a solved powered trajectory.
+  const f = Math.max(0, Math.min(1, (seconds - 3915) / 25));
+  return { ...point, altitudeM: 1500 * (1 - f) ** 2 };
 }
 export function boosterPositionAt(seconds: number): GeoPoint {
   return seconds >= 390 ? localToGeo(captureState(captureClipAt(seconds)), STARBASE) : guidePosition(boosterGuide, seconds);

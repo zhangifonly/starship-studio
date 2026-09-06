@@ -1,9 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { boosterGuide, boosterPositionAt, flight5State, guidePosition, isReturnCamera, returnCameraAvailable, shipGuide, STARBASE, type OverviewCamera } from './flight5-timeline';
+import { boosterGuide, boosterPositionAt, flight5State, isReturnCamera, isShipCamera, returnCameraAvailable, shipGuide, shipPositionAt, STARBASE, type OverviewCamera } from './flight5-timeline';
 import { geoToGlobe, sunDirectionEcef, WGS84_A, WGS84_B, METERS_PER_GLOBE_UNIT, type GeoPoint, type XYZ } from './mission-geo';
 import { createReturnScene } from './return-scene';
+import { createShip30Scene } from './ship30-scene';
+import { shipCameraAvailable } from './ship30-state';
 
 export type FlightGlobeHandle = { reset: () => void; zoom: (factor: number) => void };
 type Props = { time: number; camera: OverviewCamera; onReady: () => void; onError: () => void };
@@ -25,6 +27,7 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
     renderer.domElement.dataset.testid = 'flight-globe'; renderer.domElement.setAttribute('aria-label', 'Flight 5 地球与两级示意航迹'); el.appendChild(renderer.domElement);
     const scene = new THREE.Scene(); scene.background = new THREE.Color('#080d10');
     let nearScene: ReturnType<typeof createReturnScene> | undefined;
+    let shipScene: ReturnType<typeof createShip30Scene> | undefined;
     const camera = new THREE.PerspectiveCamera(36, 1, .002, 150), inset = new THREE.PerspectiveCamera(34, 1, .002, 150);
     const surfaceMaterial = new THREE.MeshPhongMaterial({ color: '#ffffff', shininess: 14, specular: '#17272a' });
     const globe = new THREE.Mesh(new THREE.SphereGeometry(A, 160, 96), surfaceMaterial); globe.scale.y = B / A; scene.add(globe);
@@ -44,7 +47,7 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
     })); atmosphere.scale.y = B / A; scene.add(atmosphere);
     function path(points: typeof shipGuide, color: string) {
       const positions: THREE.Vector3[] = [];
-      for (let t = 0; t <= 3940; t += 5) positions.push(position(points === boosterGuide ? boosterPositionAt(t) : guidePosition(points, t)));
+      for (let t = 0; t <= 3940; t += 5) positions.push(position(points === boosterGuide ? boosterPositionAt(t) : shipPositionAt(t)));
       const geometry = new THREE.BufferGeometry().setFromPoints(positions);
       const future = new THREE.Line(geometry, new THREE.LineDashedMaterial({ color, dashSize: .035, gapSize: .025, transparent: true, opacity: .38 })); future.computeLineDistances(); scene.add(future);
       const pastGeometry = geometry.clone(), past = new THREE.Line(pastGeometry, new THREE.LineBasicMaterial({ color })); scene.add(past);
@@ -59,7 +62,7 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
     let follow = true, zoom = 1, lastCamera = current.current.camera, width = 0, height = 0, raf = 0, drawn = '';
     const changed = () => { dirty = true; }, orbit = () => { follow = false; dirty = true; };
     controls.addEventListener('change', changed); controls.addEventListener('start', orbit);
-    api.current = { reset() { follow = true; zoom = 1; dirty = true; }, zoom(f) { zoom = THREE.MathUtils.clamp(zoom * f, .8, 1.8); if (!follow && !isReturnCamera(current.current.camera)) { camera.position.sub(controls.target).multiplyScalar(f).add(controls.target); controls.update(); } dirty = true; } };
+    api.current = { reset() { follow = true; zoom = 1; dirty = true; }, zoom(f) { zoom = THREE.MathUtils.clamp(zoom * f, .8, 1.8); if (!follow && !isReturnCamera(current.current.camera) && !isShipCamera(current.current.camera)) { camera.position.sub(controls.target).multiplyScalar(f).add(controls.target); controls.update(); } dirty = true; } };
     const resize = new ResizeObserver(changed); resize.observe(el);
     const lost = (e: Event) => { e.preventDefault(); setFailed(true); current.current.onError(); }; renderer.domElement.addEventListener('webglcontextlost', lost);
     const ray = new THREE.Ray(), unitSphere = new THREE.Sphere(new THREE.Vector3(), 1), hit = new THREE.Vector3();
@@ -82,7 +85,9 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
       const key = `${p.time}:${p.camera}`; if (key === drawn && !dirty) return;
       if (lastCamera !== p.camera) { follow = true; zoom = 1; lastCamera = p.camera; }
       const state = flight5State(p.time), sunlight = sunDirectionEcef(state.date);
-      const closeView = isReturnCamera(p.camera) && returnCameraAvailable(state.seconds);
+      const returnView = isReturnCamera(p.camera) && returnCameraAvailable(state.seconds);
+      const shipView = isShipCamera(p.camera) && shipCameraAvailable(state.seconds);
+      const closeView = returnView || shipView;
       controls.enabled = !closeView;
       sun.position.set(sunlight.x, sunlight.z, -sunlight.y).multiplyScalar(40); (atmosphere.material as THREE.ShaderMaterial).uniforms.sun.value.copy(sun.position).normalize();
       ship.position.copy(position(state.ship)); booster.position.copy(position(state.booster)); booster.visible = state.separated;
@@ -115,15 +120,22 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
       markerSizes(camera); renderer.setScissorTest(false); renderer.setViewport(0, 0, w, h); renderer.clear();
       if (!closeView) renderer.render(scene, camera);
       let nearData: ReturnType<ReturnType<typeof createReturnScene>['update']> | undefined;
+      let shipData: ReturnType<ReturnType<typeof createShip30Scene>['update']> | undefined;
       if (closeView) {
-        nearScene ??= createReturnScene(renderer);
-        nearData = nearScene.update(state, p.camera === 'ground' ? 'ground' : 'return', w / h, zoom);
-        const hidden = [ship, booster, launch, shipPath.past, shipPath.future, boosterPath.past, boosterPath.future, atmosphere, clouds];
+        if (shipView) { shipScene ??= createShip30Scene(renderer); shipData = shipScene.update(state, p.camera === 'ship-heat' ? 'ship-heat' : 'ship-close', w / h, zoom); }
+        else { nearScene ??= createReturnScene(renderer); nearData = nearScene.update(state, p.camera === 'ground' ? 'ground' : 'return', w / h, zoom); }
+        const activeScene = shipView ? shipScene! : nearScene!, activeData = shipData ?? nearData!;
+        const hidden: THREE.Object3D[] = [ship, booster, launch, shipPath.past, shipPath.future, boosterPath.past, boosterPath.future];
+        if (!shipView || state.ship.altitudeM < 16000) hidden.push(clouds);
+        if (!shipView || state.ship.altitudeM < 80000) hidden.push(atmosphere);
         const visibility = hidden.map(o => o.visible); hidden.forEach(o => { o.visible = false; });
-        scene.background = nearData.sky; scene.fog = nearData.earthFog;
-        renderer.render(scene, nearScene.earthCamera);
+        const atmosphereScale = atmosphere.scale.clone();
+        if (shipView) atmosphere.scale.multiplyScalar((A + .012) / (A + .065));
+        scene.background = activeData.sky; scene.fog = activeData.earthFog;
+        renderer.render(scene, activeScene.earthCamera);
+        atmosphere.scale.copy(atmosphereScale);
         scene.background = new THREE.Color('#080d10'); scene.fog = null; hidden.forEach((o, i) => { o.visible = visibility[i]; });
-        renderer.autoClear = false; renderer.clearDepth(); renderer.render(nearScene.scene, nearScene.camera); renderer.autoClear = true;
+        renderer.autoClear = false; renderer.clearDepth(); renderer.render(activeScene.scene, activeScene.camera); renderer.autoClear = true;
       }
       const iw = Math.min(190, Math.floor(w * .32)), ih = Math.min(145, Math.floor(h * .30));
       const insetTop = w < 620 ? 58 : h - ih - 12;
@@ -134,10 +146,11 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
       // A regional second camera keeps B12 visible when S30 passes beyond its horizon.
       const anchor = position(STARBASE), up = anchor.clone().normalize();
       inset.position.copy(anchor).add(up.multiplyScalar(1.4)); inset.up.set(0, 1, 0); inset.lookAt(anchor); inset.aspect = iw / ih; inset.updateProjectionMatrix();
-      if (closeView) { inset.position.copy(position({ ...state.ship, altitudeM: 0 }).normalize().multiplyScalar(A * 3.6)); inset.lookAt(0, 0, 0); }
+      if (returnView) { inset.position.copy(position({ ...state.ship, altitudeM: 0 }).normalize().multiplyScalar(A * 3.6)); inset.lookAt(0, 0, 0); }
       markerSizes(inset); renderer.setScissorTest(true); renderer.setScissor(w - iw - 12, h - insetTop - ih, iw, ih); renderer.setViewport(w - iw - 12, h - insetTop - ih, iw, ih); renderer.clear(); renderer.render(scene, inset); renderer.setScissorTest(false);
       Object.assign(renderer.domElement.dataset, { ready: String(ready), time: p.time.toFixed(2), missionTime: state.seconds.toFixed(2), camera: p.camera, separated: String(state.separated), caught: String(state.caught), splashed: String(state.splashed), positionKind: state.positionKind, sun: sun.position.toArray().map(v => v.toFixed(5)).join(','), ship: ship.position.toArray().join(','), booster: booster.position.toArray().join(','), cameraDistance: camera.position.distanceTo(controls.target).toFixed(4) });
       Object.assign(renderer.domElement.dataset, { near: String(closeView), localBooster: nearData ? JSON.stringify(nearData.local) : '', nearContact: String(nearData?.contact ?? false), nearPlume: String(nearData?.plume ?? false), nearFov: nearData?.fov.toFixed(5) ?? '', nearCamera: nearData?.cameraPosition.join(',') ?? '' });
+      Object.assign(renderer.domElement.dataset, { shipNear: String(shipView), shipPitch: shipData?.pose.pitch.toFixed(6) ?? '', shipHeat: shipData?.pose.heat.toFixed(6) ?? '', shipPower: shipData?.pose.power.toFixed(6) ?? '', shipSplash: String(shipData?.pose.splash ?? false), shipLocal: shipData?.local.join(',') ?? '', shipQuaternion: shipData?.quaternion.join(',') ?? '', shipCourse: shipData?.course.join(',') ?? '', shipTiles: String(shipData?.tileCount ?? 0), shipEngines: String(shipData?.engineCount ?? 0), shipCameraPosition: shipData?.cameraPosition.join(',') ?? '' });
       dirty = false; drawn = key;
     }
     raf = requestAnimationFrame(render);
@@ -145,7 +158,7 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
       disposed = true; cancelAnimationFrame(raf); resize.disconnect(); controls.dispose(); api.current = null; renderer.domElement.removeEventListener('webglcontextlost', lost);
       const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();
       scene.traverse(o => { if (o instanceof THREE.Mesh || o instanceof THREE.Line) { geometries.add(o.geometry); (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => materials.add(m)); } });
-      geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); nearScene?.dispose(); day.dispose(); cloudsMap.dispose(); renderer.dispose(); renderer.domElement.remove();
+      geometries.forEach(g => g.dispose()); materials.forEach(m => m.dispose()); nearScene?.dispose(); shipScene?.dispose(); day.dispose(); cloudsMap.dispose(); renderer.dispose(); renderer.domElement.remove();
     };
   }, []);
   return <><div ref={host} className="canvas-host"/><span ref={shipLabel} hidden className="globe-marker-label">S30</span><span ref={boosterLabel} hidden className="globe-marker-label booster">B12</span>{textureFailed && <span className="globe-asset-warning" role="status">地球底图加载失败</span>}{failed && <div className="scene-error" role="alert"><strong>三维场景暂时不可用</strong><p>事件记录仍可查看。</p><button onClick={() => location.reload()}>重新加载</button></div>}</>;

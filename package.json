@@ -20,6 +20,8 @@
     "test:geo": "node --experimental-strip-types --test scripts/mission-geo.test.mjs",
     "test:overview": "node scripts/verify-overview.mjs",
     "test:return": "node scripts/verify-return.mjs",
+    "test:ship30": "node --experimental-strip-types --test scripts/ship30.test.mjs",
+    "test:ship30-browser": "node scripts/verify-ship30.mjs",
     "test:mission": "node scripts/verify-mission.mjs",
     "test:narration": "node scripts/verify-narration.mjs",
     "test:narration-layout": "node scripts/verify-narration-layout.mjs",

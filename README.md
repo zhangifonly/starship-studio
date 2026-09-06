@@ -42,6 +42,7 @@ npm run dev
 - 任务时刻分享、独立中英文资料边界说明、五段中文任务解说。
 - 200 秒全程地理复盘、十个事件、两级独立航迹、三种区域机位与发射场小视窗。
 - B12 抛环后的返回近景与固定地面长焦；共享全球坐标、捕获末段及 S30 地球小视窗。
+- S30 第一代伴飞/热盾双视角：关机后滑行、再入、翻转减速与入水定格，不混入 V3 或海上平台。
 - WGS84 地球、基于近似任务 UTC 的太阳方位；明确区分计划时间和飞后记录。
 
 历史复盘中的 00:00-00:35 是片段时间，不是发射后 T+ 遥测。模型坐标、
@@ -83,6 +84,7 @@ npm run narration:overview
 npm run test:timeline
 npm run test:capture
 npm run test:geo
+npm run test:ship30
 npm run build
 npx playwright install chromium webkit
 # 以下命令需要另一个终端保持开发服务器运行
@@ -95,14 +97,17 @@ npm run test:platform
 npm run test:mission
 npm run test:overview
 npm run test:return
+npm run test:ship30-browser
 # 无生成音频的干净克隆
 node scripts/verify-mission.mjs --visual-only
 node scripts/verify-overview.mjs --visual-only
 node scripts/verify-return.mjs --visual-only
+node scripts/verify-ship30.mjs --visual-only
 # WebKit
 node scripts/verify-mission.mjs --webkit
 node scripts/verify-overview.mjs --webkit
 node scripts/verify-return.mjs --webkit
+node scripts/verify-ship30.mjs --webkit
 ```
 
 浏览器测试检查实际画面像素、交互、移动端布局与音频播放状态。

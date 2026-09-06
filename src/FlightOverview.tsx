@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowRight, Camera, Captions, ExternalLink, FileText, Maximize, Minus, Pause, Play, Plus, RotateCcw, Share2, Volume2, VolumeX, X } from 'lucide-react';
 import FlightGlobe, { type FlightGlobeHandle } from './FlightGlobe';
-import { flight5State, formatMissionClock, isReturnCamera, returnCameraAvailable, overviewCameras, overviewEventAt, overviewEvents, overviewHash, OVERVIEW_DURATION, parseOverviewHash, STARBASE, timelineSources, type OverviewCamera } from './flight5-timeline';
+import { flight5State, formatMissionClock, isReturnCamera, isShipCamera, returnCameraAvailable, overviewCameras, overviewEventAt, overviewEvents, overviewHash, OVERVIEW_DURATION, parseOverviewHash, STARBASE, timelineSources, type OverviewCamera } from './flight5-timeline';
+import { shipCameraAvailable, ship30Pose } from './ship30-state';
 import { daylightLabel, solarElevation } from './mission-geo';
 import { useNarration, type NarrationTrack, type Narrator } from './useNarration';
 import manifest from './overview-audio.json';
@@ -17,6 +18,7 @@ function OverviewEvidence({ index }: { index: number }) {
     <a className="overview-source-link" href={source.url} target="_blank" rel="noreferrer">{source.name}<ExternalLink size={13}/></a>
     <dl className="mission-limits"><div><dt>时间基准</dt><dd>起点约为 12:25 UTC。T+ 为按公开时间表对齐的近似任务时间，不是逐帧实飞计时。200 秒播放时间分段压缩约 65 分钟任务。</dd></div><div><dt>航迹证据等级</dt><dd>示意控制点之间插值，连续遥测未获取。经纬度、峰值时刻与落点均非测量值；公开的约 69 km 分离高度、约 212 km 远地点不能推导完整轨迹。</dd></div><div><dt>地球与光照</dt><dd>WGS84 椭球，距离用米计算。日照依据近似任务时间和位置计算；NASA 地表与云图为合成素材，并非任务当天卫星影像。地理视角使用放大定位标记，B12 近景使用返回构型模型。</dd></div></dl>
     <dl className="mission-limits"><div><dt>B12 近景边界</dt><dd>抛环后使用四栅格翼返回构型。地面长焦的观察点和自动焦距为重建；场地朝向、地面与承接高度未经测绘。最后下降段与全球位置共用坐标，但只是将捕获片段近似对齐到任务时钟。完成后保留捕获状态，不表示之后一直悬挂不动。</dd></div></dl>
+    <dl className="mission-limits"><div><dt>S30 近景边界</dt><dd>关机后展示第一代外观，四片襟翼、三台海平面与三台真空发动机。热盾分布、俯仰、襟翼偏转、受热发光与海浪为重建，不是遥测或流场计算；没有复原再入损伤。夜侧有展示补光，机位不是实拍摄影点。画面停在入水瞬间；飞后记录中的入水后约 16 秒火球与后续状态未重建。</dd></div></dl>
     <h3>任务来源</h3><ol className="mission-sources">{timelineSources.map(s => <li key={s.id}><a href={s.url} target="_blank" rel="noreferrer">{s.name}<ExternalLink size={12}/></a><small>{s.date}</small><p>{s.scope}</p></li>)}</ol>
   </div>;
 }
@@ -32,7 +34,9 @@ export default function FlightOverview({ onFullscreen }: { onFullscreen: () => v
   const scene = useRef<FlightGlobeHandle>(null), evidence = useRef<HTMLDialogElement>(null), share = useRef<HTMLDialogElement>(null);
   const speech = useNarration(narration, playing, time, rate, seekVersion, voice, track);
   const index = overviewEventAt(time), event = overviewEvents[index], state = flight5State(time);
-  const closeView = isReturnCamera(camera) && returnCameraAvailable(state.seconds);
+  const returnView = isReturnCamera(camera) && returnCameraAvailable(state.seconds);
+  const shipView = isShipCamera(camera) && shipCameraAvailable(state.seconds), closeView = returnView || shipView;
+  const shipPose = ship30Pose(state.seconds);
   useEffect(() => {
     if (!playing || !ready || failed || (narration && speech.loading && !speech.failed)) return;
     let raf = 0, previous = performance.now();
@@ -66,10 +70,10 @@ export default function FlightOverview({ onFullscreen }: { onFullscreen: () => v
       <div className={`mission-stage overview-stage${closeView ? ' return-stage' : ''}`}>
         <FlightGlobe ref={scene} time={time} camera={camera} onReady={() => setReady(true)} onError={() => { setFailed(true); setPlaying(false); }}/>
         <div className="overview-clock"><small>任务时间 / 近似</small><output data-testid="overview-mission-time">T+{formatMissionClock(state.seconds)}</output><span>约 {state.date.toISOString().slice(11, 16)} UTC</span></div>
-        <div className="overview-legend">{closeView ? <><span>B12 / 四栅格翼</span><span>{camera === 'ground' ? '固定地面机位 · 自动焦距' : '返回近距跟踪'}</span></> : <><span><i className="ship-key"/>S30 上面级</span><span><i className="booster-key"/>B12 助推器</span></>}</div>
-        <div className="overview-inset-label">{closeView ? 'S30 / 地球' : 'STARBASE'} <span>{closeView ? state.splashed ? '印度洋溅落' : '上面级任务' : state.caught ? 'B12 已捕获' : state.separated ? 'B12 返回中' : '两级上升'}</span></div>
+        <div className="overview-legend">{shipView ? <><span>S30 / 第一代 · 四襟翼</span><span>{shipPose.phase}</span></> : returnView ? <><span>B12 / 四栅格翼</span><span>{camera === 'ground' ? '固定地面机位 · 自动焦距' : '返回近距跟踪'}</span></> : <><span><i className="ship-key"/>S30 上面级</span><span><i className="booster-key"/>B12 助推器</span></>}</div>
+        <div className="overview-inset-label">{returnView ? 'S30 / 地球' : 'STARBASE'} <span>{returnView ? state.splashed ? '印度洋溅落' : '上面级任务' : state.caught ? 'B12 已捕获' : state.separated ? 'B12 返回中' : '两级上升'}</span></div>
         <div className="mission-scene-tools"><button className="tool" aria-label="航迹放大" title="放大" onClick={() => scene.current?.zoom(.85)}><Plus size={16}/></button><button className="tool" aria-label="航迹缩小" title="缩小" onClick={() => scene.current?.zoom(1.18)}><Minus size={16}/></button><button className="tool" aria-label="重置航迹视角" title="重置视角" onClick={() => scene.current?.reset()}><RotateCcw size={16}/></button></div>
-        <span className="overview-render-note">{closeView ? state.seconds > 426.6 ? '捕获状态保留 · 后续转运未重建' : 'B12 返回重建 · 非实拍机位' : isReturnCamera(camera) ? '抛环前 · 发射场区域' : '示意插值 · 非遥测'}</span>
+        <span className="overview-render-note">{shipView ? state.splashed ? '入水瞬间定格 · 后续未重建' : 'S30 姿态与受热重建 · 非遥测' : returnView ? state.seconds > 426.6 ? '捕获状态保留 · 后续转运未重建' : 'B12 返回重建 · 非实拍机位' : isReturnCamera(camera) ? '抛环前 · 发射场区域' : isShipCamera(camera) ? '关机前 · 上面级区域' : '示意插值 · 非遥测'}</span>
       </div>
       <div className="overview-vehicle-strip"><div><span className="booster-key">B12</span><strong>{state.caught ? '塔架捕获完成' : state.separated ? '返回 Starbase' : '与 S30 组合飞行'}</strong><small>{daylightLabel(solarElevation(state.date, STARBASE))} · 发射场</small></div><div><span className="ship-key">S30</span><strong>{state.splashed ? '印度洋溅落' : state.separated ? '独立飞行' : '组合上升'}</strong><small>连续遥测未获取</small></div><a href="#mission/flight-5">捕获特写<ArrowRight size={14}/></a></div>
       <div className="mission-caption overview-caption"><div><span className="mission-panel-eyebrow">事件 {String(index + 1).padStart(2, '0')} / 10</span><h2 data-testid="overview-phase">{event.name}</h2></div><p>{captions ? event.text : event.vehicle}</p></div>
