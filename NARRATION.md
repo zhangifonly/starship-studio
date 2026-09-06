@@ -4,7 +4,7 @@
 `npm run narration:plan` 可生成 `public/narration/plan.json` 和
 `public/narration/subtitles.srt`，无需语音 API 密钥。
 
-## 当前版本
+## 综合演示
 
 166 秒、12 段中文讲稿，已生成两套共 24 段 MP3。沿用 phyviz 的 Microsoft
 Edge TTS 配置：默认 `zh-CN-YunxiNeural`（云希），可切换
@@ -65,3 +65,24 @@ SRT 仍然是阶段级字幕，不是逐字对齐。
 内容约束：不宣称这是一项真实任务，不编造遥测。末两段解说明确标注海上
 平台和支架为未验证的概念设计，不混淆星舰与猎鹰九号已验证的无人船回收，
 也不将星舰塔架捕获表现为已经验证的能力。
+
+## Flight 5 捕获复盘
+
+新增历史复盘使用独立的 35 秒、5 段讲稿，源文件为 `src/mission-data.ts`。
+云希和晓晓共 10 段 MP3，保持与综合演示相同的音色和生成参数，但不复用
+含 V3 / 平台概念的讲稿。生成后实测每句短于阶段预算至少 0.2 秒。
+
+```sh
+npm run narration:capture
+.venv-tts/bin/python scripts/generate-narration.py --plan public/narration/capture-plan.json --manifest src/capture-audio.json
+npm run test:capture
+npm run test:mission
+```
+
+`src/capture-audio.json` 是播放清单，`public/narration/capture-subtitles.srt`
+是片段字幕。音频缺失时独立禁用任务语音，不影响原有演示。
+两套体验共用音频同步逻辑，默认有声但必须先点击播放；离开页面即暂停。
+自然换段不重建三维画布，不改变字幕和状态栏的高度。
+
+这里的历史事实是 Flight 5 确实捕获了 B12；35 秒只是重建片段时钟，
+不是真实任务的精确 T+ 时间，旁白也不应给未测量的运动参数背书。
