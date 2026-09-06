@@ -10,7 +10,7 @@
 .deployment-workspace .deployment-events { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .deployment-workspace .deployment-caption { height: 100px; }
 @media (max-width: 700px) {
-  .studio:has(.mission-workspace.deployment-workspace) { min-height: 980px; }
+  .studio:has(.mission-workspace.deployment-workspace) { min-height: 1000px; }
   .deployment-workspace .mission-topbar h1 { font-size: 22px; }
   .deployment-workspace .mission-picker select { max-width: 142px; }
   .deployment-workspace .mission-viewbar { gap: 4px; }
