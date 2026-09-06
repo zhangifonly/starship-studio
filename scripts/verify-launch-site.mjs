@@ -16,7 +16,7 @@ try {
     await expect(canvas).toHaveAttribute('data-textures', 'ready');
     const slider = page.getByRole('slider', { name: '发射演示进度' });
     const captures = new Map();
-    for (const [camera, times] of (grip ? [['cinematic', [0, 5, 89, 0]]] : [['cinematic', [0, 5, 14, 18, 82, 86, 89]], ['ground', [0, 89]], ['booster', [89, 82, 0, 89]]])) {
+    for (const [camera, times] of (grip ? [['pad', [0, 5, 12, 89, 0]], ['cinematic', [0, 5, 89, 0]]] : [['cinematic', [0, 5, 14, 18, 82, 86, 89]], ['ground', [0, 89]], ['booster', [89, 82, 0, 89]]])) {
       await page.getByRole('combobox', { name: '发射视角' }).selectOption(camera);
       await expect(canvas).toHaveAttribute('data-camera', camera);
       for (const time of times) {
@@ -28,7 +28,7 @@ try {
         if (captures.has(key)) expect(Buffer.compare(captures.get(key), buffer)).toBe(0);
         captures.set(key, buffer);
         await page.screenshot({ path: `artifacts/launch-site/${width}-${key}.png` });
-        if (grip) {
+        if (grip && camera !== 'pad') {
           const rect = await canvas.boundingBox();
           const x = rect.x + rect.width * .72, y = rect.y + rect.height * .42;
           await page.mouse.move(x, y); await page.mouse.down();

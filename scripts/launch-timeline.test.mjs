@@ -32,7 +32,7 @@ test('ship separation is position-continuous and reversible', () => {
 test('booster is captured and shut down; ship reaches the concept platform and shuts down', () => {
   const caught = launchState(90), landed = launchState(166);
   assert.equal(caught.captured, true); assert.equal(caught.boosterPower, 0);
-  assert.equal(caught.booster.x, 0); assert.equal(caught.booster.angle, 0);
+  assert.equal(caught.booster.x, launchSite.catch.x); assert.equal(caught.booster.angle, 0);
   assert.equal(landed.landed, true); assert.equal(landed.shipPower, 0);
   assert.ok(Math.abs(landed.ship.x - shipTouchdown.x) < 1e-9);
   assert.ok(Math.abs(landed.ship.y - shipTouchdown.y) < 1e-9);
@@ -95,7 +95,10 @@ test('catch hardware closes independently, continuously and reversibly', () => {
   site.update(launchState(82));
   assert.ok(site.arms[0].pivot.rotation.y > 0 && site.arms[1].pivot.rotation.y < 0);
   site.update(launchState(86));
-  assert.ok(Math.abs(site.arms[0].pivot.rotation.y) < 1e-9); assert.ok(Math.abs(site.arms[1].pivot.rotation.y) < 1e-9);
+  const closedHeading = Math.atan2(launchSite.arms.pivotHalfGap - launchSite.arms.halfGap,
+    launchSite.catch.x - launchSite.tower.x - launchSite.arms.carriageX);
+  assert.ok(Math.abs(site.arms[0].pivot.rotation.y + closedHeading) < 1e-9);
+  assert.ok(Math.abs(site.arms[1].pivot.rotation.y - closedHeading) < 1e-9);
   for (const t of [1, 2, 5, 7, 12, 24, 26, 34, 44, 52, 68, 76, 80, 82, 86, 89]) {
     const before = launchState(t - .0001), after = launchState(t + .0001);
     assert.ok(Math.hypot(before.booster.x - after.booster.x, before.booster.y - after.booster.y, before.booster.z - after.booster.z) < .01);
@@ -135,6 +138,64 @@ test('initial supports unload before opening and release before ignition', () =>
   assert.equal(launchState(5).armOpening, 1);
   assert.equal(launchState(5).boosterPower, 0);
   assert.equal(launchState(12).armOpening, 1);
+});
+
+test('pad and outboard catch corridor share the corner-facing tower working axis', () => {
+  const { tower, pad, catch: capture } = launchSite;
+  assert.equal(pad.z, tower.z); assert.equal(capture.z, tower.z);
+  assert.ok(tower.x < pad.x && pad.x < capture.x);
+  assert.ok(capture.x - pad.x > pad.radius + .49, 'catch column overlaps the mount');
+  assert.equal(tower.yaw, Math.PI / 4);
+  site.update(launchState(89)); site.root.updateMatrixWorld(true);
+  assert.ok(bounds(site.tower).max.x < pad.x - pad.radius);
+  for (const { pivot } of site.arms) {
+    const end = pivot.localToWorld(new THREE.Vector3(launchSite.arms.length, 0, 0));
+    assert.ok(end.x > capture.x, 'capture falls beyond the arm tip');
+  }
+});
+
+test('independent umbilical arm connects before launch and retracts clear before liftoff', () => {
+  site.update(launchState(0)); site.root.updateMatrixWorld(true);
+  const tip = site.qdHead.localToWorld(new THREE.Vector3(.08, 0, 0));
+  assert.ok(Math.abs(tip.x - launchSite.qd.tipX) < 1e-6);
+  assert.ok(Math.abs(tip.z - launchSite.qd.tipZ) < 1e-6);
+  assert.ok(Math.abs(Math.hypot(tip.x, tip.z) - .45) < .01);
+  assert.equal(launchState(10).qdOpening, 0); assert.equal(launchState(12).qdOpening, 1);
+  site.update(launchState(12)); site.root.updateMatrixWorld(true);
+  assert.ok(bounds(site.qd).max.x < -.6, 'umbilical obstructs the departing rocket');
+  assert.equal(launchState(89).qdOpening, 1);
+});
+
+test('full arm trusses clear the booster shell through release and capture', () => {
+  const a = new THREE.Vector3(), b = new THREE.Vector3();
+  for (let t = 0; t <= 89; t += .25) {
+    if (t > 24 && t < 76) continue;
+    const state = launchState(t), body = state.booster;
+    site.update(state); site.root.updateMatrixWorld(true);
+    for (const { pivot } of site.arms) pivot.traverse(mesh => {
+      if (!mesh.isMesh) return;
+      const positions = mesh.geometry.attributes.position, indices = mesh.geometry.index;
+      const count = indices ? indices.count : positions.count;
+      for (let i = 0; i < count; i += 3) for (let edge = 0; edge < 3; edge++) {
+        const ia = i + edge, ib = i + (edge + 1) % 3;
+        a.fromBufferAttribute(positions, indices ? indices.getX(ia) : ia).applyMatrix4(mesh.matrixWorld);
+        b.fromBufferAttribute(positions, indices ? indices.getX(ib) : ib).applyMatrix4(mesh.matrixWorld);
+        // Clip each triangle edge to the cylindrical hull's vertical interval.
+        const low = body.y + .57, high = body.y + 6.45, dy = b.y - a.y;
+        let from = 0, to = 1;
+        if (Math.abs(dy) < 1e-8) { if (a.y < low || a.y > high) continue; }
+        else {
+          const p = (low - a.y) / dy, q = (high - a.y) / dy;
+          from = Math.max(0, Math.min(p, q)); to = Math.min(1, Math.max(p, q));
+          if (from > to) continue;
+        }
+        const dx = b.x - a.x, dz = b.z - a.z;
+        const closest = Math.max(from, Math.min(to, -((a.x - body.x) * dx + (a.z - body.z) * dz) / (dx * dx + dz * dz || 1)));
+        assert.ok(Math.hypot(a.x + closest * dx - body.x, a.z + closest * dz - body.z) >= .49,
+          `arm truss penetrates booster at ${t}s`);
+      }
+    });
+  }
 });
 
 test('all four ship feet contact the actual platform deck after touchdown', () => {

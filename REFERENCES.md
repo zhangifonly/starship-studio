@@ -79,13 +79,17 @@ used for this model's current exterior or engine counts.
 
 The launch view reuses the same sourced exterior and illustrates the general
 sequence of booster ignition, liftoff, pitch-over, hot staging, booster boostback,
-descent and tower capture, plus ship coast, reentry, flip and ocean landing.
+descent and tower capture, plus ship coast, reentry, flip and concept offshore-platform landing.
 It is not a reconstruction of a named flight. The
 166-second timeline, trajectory, altitude, attitude, lighting, thrust transitions,
 and separation spacing are authored for visual explanation, not measured flight
 data. The coastal pad, tower, support arms, tanks, clouds, and exhaust are
-simplified scene context, not reference CAD. Controlled ocean landing is not
-salvage or reuse, and ship tower capture is not depicted as a verified capability.
+simplified scene context, not reference CAD. The six-leg mount and tower use early
+Pad A visual references, not current Pad B engineering. See [LAUNCH_SITE.md](LAUNCH_SITE.md)
+for photographs, the corner-facing working layout, independent umbilical and
+outboard catch corridor; their dimensions and centerline remain approximations.
+The offshore platform and ship supports are unverified concepts, not demonstrated
+Starship recovery. Ship tower capture is not depicted as a verified capability.
 The coast is not a numerically simulated orbit. One compressed clock advances
 both stages; the director camera switches subjects to show their separate paths.
 

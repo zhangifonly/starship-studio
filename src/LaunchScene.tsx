@@ -176,7 +176,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       for (let i = 0; i < 70; i++) {
         const age = ((Math.max(0, t - 5) * .19 + i / 70) % 1), a = i * 2.39996;
         const radius = 1 + age * 9;
-        dummy.position.set(Math.cos(a) * radius, .25 + Math.sin(age * Math.PI) * (1.3 + i % 3 * .3), Math.sin(a) * radius + (t >= 68 ? state.booster.z : 0));
+        dummy.position.set(Math.cos(a) * radius + (t >= 68 ? state.booster.x : 0), .25 + Math.sin(age * Math.PI) * (1.3 + i % 3 * .3), Math.sin(a) * radius + (t >= 68 ? state.booster.z : 0));
         const size = (.2 + Math.sin(age * Math.PI) * 1.45) * state.smoke;
         dummy.scale.set(size * 1.4, size * .7, size); dummy.updateMatrix(); smoke.setMatrixAt(i, dummy.matrix);
       }
@@ -209,6 +209,10 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       if (p.cameraMode === 'ground') {
         camera.up.set(0, 1, 0); desiredPosition.set(19 * zoom, 6, 29 * zoom); altitude = 0;
         target.copy(t < 94 ? boosterTarget : shipTarget);
+      }
+      if (p.cameraMode === 'pad') {
+        camera.up.set(0, 0, -1); target.set(-.7, 0, 0);
+        desiredPosition.set(-.7, 28 * Math.max(1, .9 / camera.aspect) * zoom, .01); altitude = 0;
       }
       const globeView = p.cameraMode === 'earth';
       controls.minDistance = globeView ? EARTH_RADIUS + 40 : 8; controls.maxDistance = globeView ? 6000 : 400;

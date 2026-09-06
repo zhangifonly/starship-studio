@@ -2,10 +2,13 @@
 
 本场景仍是流程示意，不是某座发射塔或某次飞行的测绘复原。
 局部箭体和设施采用每单位约 10 米的比例，地球与航程另用压缩比例。
+六腿圆形发射台和塔架采用早期 Starbase Pad A 的形制作为参考，不声称是
+当前 Pad B 或 V3 配套设施的精确复原。
 
 ## 位置关系
 
-- 发射位与塔架捕获位分开，返回箭体不重新落在发射台上。
+- 塔架转角面向作业区，双臂基座、发射位与外侧捕获位共用作业方向。
+- 发射位与塔架捕获位分开，返回箭体在台外悬空捕获，不重新落在发射台上。
 - 开孔发射台通过六处支承接到助推器底部承力环，中央留出排焰空间。
 - 开场为整箭就位支承：双臂分别朝向发射位的两个上部支点，先卸载，再张开。
 - 这段装配收尾与发射准备被压缩到开场，不是某次飞行倒计时的记录。
@@ -13,6 +16,8 @@
 - 返回时先对准捕获通道；两根机械臂分别开合，托住箭体上部支点。
 - 捕获支点在栅格翼下方，不以栅格翼本体承重。
 - 支点下表面和机械臂承托面使用同一组几何参数；捕获后保持接触。
+- 双臂为外侧箱形桁架，承托轨位于内侧上缘；桁架不得穿过箭体。
+- 固定高度的独立脐带臂连接星舰下部，起飞前退开，不跟随捕获升降架移动。
 
 布局定义在 `src/launch-site-layout.ts`，设施建模在 `src/launch-site.ts`。
 `launch-timeline.ts` 同时决定助推器三维位置与轴向朝向、机械臂高度、开度和目标支点。
@@ -24,15 +29,23 @@
 - [Flight 5 返回照片（SpaceX，经 Wikimedia Commons）](https://commons.wikimedia.org/wiki/File:Starship_Booster_Return_on_Final_Approach_(54063904149).jpg)：核对塔架、双臂、发射台与下降箭体的位置关系。
 - [Flight 5 飞行记录及来源](https://en.wikipedia.org/wiki/Starship_flight_test_5)：返回末段对准双臂并捕获的动作顺序。
 - [Everyday Astronaut 的 Starbase 访谈](https://everydayastronaut.com/starbase-tour-and-interview-with-elon-musk/)：Super Heavy 的栅格翼上升时保持展开，不沿用 Falcon 9 的折叠方式。
+- [Starship full stack 现场照片](https://commons.wikimedia.org/wiki/File:Starship_full_stack.jpg)：核对六腿发射台、塔身转角、堆叠箭体、双臂桁架与独立脐带臂。
+- [Tower + Booster 现场照片](https://commons.wikimedia.org/wiki/File:Tower_%2B_Booster.jpg)：核对捕获臂升降架与固定脐带臂不是同一机构。
+- [Starbase 场区总平面图](https://commons.wikimedia.org/wiki/File:StarbaseLaunchSiteUSArmy2025.png)：仅核对 Pad 1/Pad 2 与塔架、台区的大体相邻关系。图中含规划覆盖层且注明不可按比例量测，不从中推导精确尺寸；含专有资料标记，不随项目分发。
 
 参考照片展示的是早期助推器；本项目的 V3 外形、设施尺寸、具体偏移、
 支点形状与控制曲线仍有简化，不应解释为 V3 的精确工程设计。
+当前作业中心线、塔身旋转角、臂长和捕获位距离是为了表达上述关系选择的
+近似场景参数，不是从照片测出的实测坐标。
 
 ## 验证
 
 `npm run test:timeline` 检查支承接触、排焰孔、离塔间隙、捕获支点对位、
 轨迹连续性以及跳转复原。`npm run test:launch-site` 检查桌面与手机的
 起飞及捕获画面、三个机位、像素非空、播放与手动旋转。
+`npm run test:launch-site -- --grip` 另检查发射场俯视、初始承托、开臂、
+脐带臂退开和捕获状态，桌面与手机均生成截图。三维几何测试同时扫描
+桁架三角边与箭体圆柱包络的间隙，避免只验证细承托轨却漏掉粗桁架。
 
 ## 海上平台概念着陆
 

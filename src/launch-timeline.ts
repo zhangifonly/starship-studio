@@ -4,11 +4,12 @@ import { landingSite, shipTouchdown } from './landing-site-layout.ts';
 export { EARTH_RADIUS, seaLevel } from './world-scale.ts';
 
 export const LAUNCH_DURATION = 166;
-export type CameraMode = 'cinematic' | 'ship' | 'booster' | 'ground' | 'earth' | 'landing';
+export type CameraMode = 'cinematic' | 'ship' | 'booster' | 'ground' | 'earth' | 'landing' | 'pad';
 export const cameraModes: { id: CameraMode; name: string }[] = [
   { id: 'cinematic', name: '导演镜头' }, { id: 'ship', name: '跟随星舰' },
   { id: 'booster', name: '跟随助推器' }, { id: 'ground', name: '地面机位' }, { id: 'earth', name: '地球全景' },
   { id: 'landing', name: '海上平台' },
+  { id: 'pad', name: '发射场俯视' },
 ];
 export const launchPhases = [
   { start: 0, name: '发射准备', short: '准备', focus: '整箭', propulsion: '就位支承 / 双臂解锁', description: '开场从整箭就位支承开始，双臂随后卸载并张开，底部发射台继续支承整箭。这是压缩的装配至发射示意，不对应真实倒计时。', narration: '星舰即将出发，一起观察两级火箭的飞行与返回。' },
@@ -71,6 +72,7 @@ export function launchState(time: number) {
     darkness: smooth((focusAltitude - 25) / 65),
     smoke: Math.max(smooth((t - 6) / 3) * (1 - smooth((t - 18) / 8)), smooth((t - 78) / 5) * (1 - smooth((t - 89) / 5)) * .65),
     armOpening: smooth((t - 2) / 3) * (1 - smooth((t - 82) / 4)),
+    qdOpening: smooth((t - 10) / 2),
     armHeight: launchRailY - .18 * smooth((t - 1) / 1)
       + (launchSite.arms.parkedY - launchRailY + .18) * smooth((t - 5) / 2)
       + (catchRailY - launchSite.arms.parkedY) * smooth((t - 68) / 8),
