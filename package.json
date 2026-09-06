@@ -13,6 +13,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test:browser": "node scripts/verify.mjs",
     "test:launch": "node scripts/verify-launch.mjs",
+    "test:launch-site": "node scripts/verify-launch-site.mjs",
     "test:timeline": "node --experimental-strip-types --test scripts/launch-timeline.test.mjs",
     "test:narration": "node scripts/verify-narration.mjs",
     "test:narration-layout": "node scripts/verify-narration-layout.mjs",

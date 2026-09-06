@@ -1,3 +1,5 @@
+import { catchRailY, launchSite } from './launch-site-layout.ts';
+
 export const LAUNCH_DURATION = 166;
 export const EARTH_RADIUS = 700;
 export type CameraMode = 'cinematic' | 'ship' | 'booster' | 'ground' | 'earth';
@@ -26,7 +28,9 @@ export function phaseAt(time: number) { return launchPhases.reduce((index, phase
 export function formatLaunchTime(time: number) { return `${Math.floor(time / 60).toString().padStart(2, '0')}:${Math.floor(time % 60).toString().padStart(2, '0')}`; }
 export const seaLevel = (x: number) => Math.sqrt(EARTH_RADIUS ** 2 - x ** 2) - EARTH_RADIUS - .4;
 type Key = [time: number, x: number, altitude: number, angle: number];
-const boosterKeys: Key[] = [[0, 0, 2.2, 0], [12, 0, 2.2, 0], [24, 1.8, 20, -.12], [40, 22, 69, -.65], [44, 29, 90, -.67], [52, 37, 112, 1.7], [60, 23, 104, 2.5], [68, 10, 69, .3], [76, 1.3, 20, .04], [82, 0, 9, 0], [89, 0, 4.6, 0], [166, 0, 4.6, 0]];
+const launchAltitude = launchSite.launchBaseY - seaLevel(launchSite.pad.x);
+const catchAltitude = launchSite.catch.baseY - seaLevel(launchSite.catch.x);
+const boosterKeys: Key[] = [[0, 0, launchAltitude, 0], [12, 0, launchAltitude, 0], [24, 0, 20, 0], [40, 22, 69, -.65], [44, 29, 90, -.67], [52, 37, 112, 1.7], [60, 23, 104, 2.5], [68, 10, 69, .3], [76, 1.3, 20, .04], [82, launchSite.catch.x, 9, 0], [89, launchSite.catch.x, catchAltitude, 0], [166, launchSite.catch.x, catchAltitude, 0]];
 const releaseX = 29 + Math.sin(.67) * 7.35 + .05;
 const releaseAltitude = 90 + Math.cos(.67) * 7.35 + .4 + seaLevel(29) - seaLevel(releaseX);
 const shipKeys: Key[] = [[44, releaseX, releaseAltitude, -.67], [52, 53, 127, -.9], [68, 100, 155, -1.2], [94, 175, 132, -1.45], [112, 240, 80, -1.55], [126, 279, 29, -1.58], [136, 292, 12, -1.58], [144, 297, 5, -.6], [154, 298, .05, -.44], [166, 298, .05, -.44]];
@@ -35,15 +39,17 @@ function sample(keys: Key[], time: number) {
   const a = keys[Math.max(0, next === -1 ? keys.length - 1 : next - 1)], b = keys[next === -1 ? keys.length - 1 : next];
   const f = a === b ? 0 : smooth((time - a[0]) / (b[0] - a[0]));
   const x = a[1] + (b[1] - a[1]) * f, altitude = a[2] + (b[2] - a[2]) * f;
-  return { x, y: seaLevel(x) + altitude, altitude, angle: a[3] + (b[3] - a[3]) * f };
+  return { x, y: seaLevel(x) + altitude, z: 0, altitude, angle: a[3] + (b[3] - a[3]) * f };
 }
 
 // The globe, vehicle and flight distances use different illustrative scales.
 // Every state is sampled from the clock, never integrated from previous frames.
 export function launchState(time: number) {
   const t = clamp(time, 0, LAUNCH_DURATION), booster = sample(boosterKeys, t);
+  // Return to the catch corridor beside the mount, not onto the launch deck.
+  booster.z = launchSite.pad.z + (launchSite.catch.z - launchSite.pad.z) * smooth((t - 68) / 12);
   const separation = smooth((t - 42) / 8);
-  const attached = { x: booster.x + Math.sin(-booster.angle) * 7.35, y: booster.y + Math.cos(booster.angle) * 7.35, altitude: booster.altitude + 7.35, angle: booster.angle };
+  const attached = { x: booster.x + Math.sin(-booster.angle) * 7.35, y: booster.y + Math.cos(booster.angle) * 7.35, z: booster.z, altitude: booster.altitude + 7.35, angle: booster.angle };
   const independent = sample(shipKeys, Math.max(44, t));
   const ship = t < 42 ? attached : t < 44 ? { ...attached, x: attached.x + smooth((t - 42) / 2) * .05, y: attached.y + smooth((t - 42) / 2) * .4 } : independent;
   const ascent = smooth((t - 6) / 2) * (1 - .9 * smooth((t - 40) / 3)) * (1 - smooth((t - 47) / 3));
@@ -58,7 +64,8 @@ export function launchState(time: number) {
     boosterPower: Math.max(ascent, boostback, landing), shipPower: Math.max(shipAscent, shipLanding),
     darkness: smooth((focusAltitude - 25) / 65),
     smoke: Math.max(smooth((t - 6) / 3) * (1 - smooth((t - 18) / 8)), smooth((t - 78) / 5) * (1 - smooth((t - 89) / 5)) * .65),
-    armRetraction: smooth((t - 3) / 5) * (1 - smooth((t - 80) / 8)),
+    armOpening: 1 - smooth((t - 82) / 4),
+    armHeight: launchSite.arms.parkedY + (catchRailY - launchSite.arms.parkedY) * smooth((t - 68) / 8),
     heating: smooth((t - 112) / 5) * (1 - smooth((t - 132) / 5)),
     splash: smooth((t - 153.5) / 1) * (1 - smooth((t - 159) / 6)),
     captured: t >= 89, landed: t >= 155,

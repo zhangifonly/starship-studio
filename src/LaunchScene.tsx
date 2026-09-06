@@ -6,6 +6,7 @@ import { createRocket } from './rocket-model';
 import { parts } from './parts';
 import { EARTH_RADIUS, launchState, smooth, type CameraMode } from './launch-timeline';
 import { createEarthWorld } from './earth-world';
+import { createCatchPins, createLaunchSite } from './launch-site';
 
 export type LaunchSceneHandle = { reset: () => void; zoom: (factor: number) => void };
 type Props = { time: number; following: boolean; cameraMode: CameraMode; onReady: () => void; onError: () => void; onOrbit: () => void };
@@ -48,10 +49,6 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     function mesh(parent: THREE.Object3D, geometry: THREE.BufferGeometry, material: THREE.Material, x = 0, y = 0, z = 0) {
       const m = new THREE.Mesh(geometry, material); m.position.set(x, y, z); parent.add(m); return m;
     }
-    function beam(parent: THREE.Object3D, a: THREE.Vector3, b: THREE.Vector3, radius = .045) {
-      const m = mesh(parent, new THREE.CylinderGeometry(radius, radius, a.distanceTo(b), 6), steel);
-      m.position.copy(a).add(b).multiplyScalar(.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); return m;
-    }
     // A simplified coastal launch site establishes scale without implying exact pad CAD.
     const world = createEarthWorld(scene, ok => {
       renderer.domElement.dataset.textures = ok ? 'ready' : 'failed';
@@ -60,25 +57,9 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     mesh(ground, new THREE.BoxGeometry(28, .35, 35), concrete, -5, -.15, -6);
     const terrain = mesh(ground, new THREE.CircleGeometry(38, 64), new THREE.MeshStandardMaterial({ color: '#666f50', roughness: 1 }), -18, -.38, -10); terrain.rotation.x = -Math.PI / 2;
     mesh(ground, new THREE.BoxGeometry(4, .03, 55), dark, -11, .05, -20);
-    mesh(ground, new THREE.CylinderGeometry(1.12, 1.15, .35, 48), dark, 0, 1.55, 0);
-    for (let i = 0; i < 6; i++) {
-      const angle = i / 6 * Math.PI * 2; mesh(ground, new THREE.CylinderGeometry(.13, .19, 1.5, 10), steel, Math.cos(angle), .72, Math.sin(angle));
-    }
+    const site = createLaunchSite(steel, dark, white); ground.add(site.root);
+    booster.add(createCatchPins(steel.clone()));
     mesh(ground, new THREE.BoxGeometry(4, .45, 7), concrete, 0, -.05, 0);
-    const tower = new THREE.Group(); tower.position.set(-2.6, 0, -1.8); ground.add(tower);
-    for (const x of [-.55, .55]) for (const z of [-.55, .55]) mesh(tower, new THREE.BoxGeometry(.14, 14.5, .14), steel, x, 7.25, z);
-    for (let level = 0; level < 12; level++) {
-      const y = level * 1.2;
-      mesh(tower, new THREE.BoxGeometry(1.25, .08, 1.25), dark, 0, y, 0);
-      for (const z of [-.55, .55]) beam(tower, new THREE.Vector3(-.55, y, z), new THREE.Vector3(.55, y + 1.2, z));
-      for (const x of [-.55, .55]) beam(tower, new THREE.Vector3(x, y, -.55), new THREE.Vector3(x, y + 1.2, .55));
-    }
-    mesh(tower, new THREE.BoxGeometry(1.6, .28, 1.6), white, 0, 14.45, 0);
-    const arms = new THREE.Group(); arms.position.set(.55, 8.85, .35); tower.add(arms);
-    for (const z of [-.45, .55]) {
-      mesh(arms, new THREE.BoxGeometry(2.2, .13, .13), steel, 1.05, 0, z);
-      beam(arms, new THREE.Vector3(0, .5, z), new THREE.Vector3(2.1, 0, z), .04);
-    }
     for (let i = 0; i < 5; i++) {
       mesh(ground, new THREE.CylinderGeometry(.75, .75, 3.6, 24), white, -8 - i % 2 * 2, 1.8, -9 - Math.floor(i / 2) * 2.3);
       const dome = mesh(ground, new THREE.SphereGeometry(.75, 20, 12), white, -8 - i % 2 * 2, 3.6, -9 - Math.floor(i / 2) * 2.3); dome.scale.y = .4;
@@ -126,7 +107,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     const boosterMarker = mesh(scene, new THREE.SphereGeometry(4, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffc489', depthTest: false }));
     const paths = new THREE.Group(); scene.add(paths);
     for (const stage of ['ship', 'booster'] as const) {
-      const points = Array.from({ length: 167 }, (_, t) => { const s = launchState(t)[stage]; return new THREE.Vector3(s.x, s.y + 2, 0); });
+      const points = Array.from({ length: 167 }, (_, t) => { const s = launchState(t)[stage]; return new THREE.Vector3(s.x, s.y + 2, s.z); });
       paths.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), new THREE.LineDashedMaterial({ color: stage === 'ship' ? '#d0ef9b' : '#ffc489', dashSize: 4, gapSize: 3, transparent: true, opacity: .6, depthTest: false })).computeLineDistances());
     }
     const smokeMaterial = new THREE.MeshBasicMaterial({ color: '#d2d9d5', map: puffTexture, transparent: true, opacity: .7, depthWrite: false });
@@ -156,10 +137,9 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
         camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); resetRequested = true;
       }
       const p = latest.current, state = launchState(p.time), t = state.time;
-      booster.position.set(state.booster.x, state.booster.y, 0); booster.rotation.z = state.booster.angle;
-      ship.position.set(state.ship.x, state.ship.y, 0); ship.rotation.z = state.ship.angle;
-      arms.rotation.y = -state.armRetraction * 1.15;
-      arms.position.y = 8.85 + smooth((t - 68) / 10) * 2.4;
+      booster.position.set(state.booster.x, state.booster.y, state.booster.z); booster.rotation.z = state.booster.angle;
+      ship.position.set(state.ship.x, state.ship.y, state.ship.z); ship.rotation.z = state.ship.angle;
+      site.update(state);
       const flutter = 1 + Math.sin(t * 39) * .025 + Math.sin(t * 63) * .018;
       boosterPlume.visible = state.boosterPower > .01; boosterPlume.scale.setScalar(Math.max(.001, state.boosterPower)); boosterPlume.scale.y *= flutter;
       shipPlume.visible = state.shipPower > .01;
@@ -184,13 +164,13 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       for (let i = 0; i < 70; i++) {
         const age = ((Math.max(0, t - 5) * .19 + i / 70) % 1), a = i * 2.39996;
         const radius = 1 + age * 9;
-        dummy.position.set(Math.cos(a) * radius, .25 + Math.sin(age * Math.PI) * (1.3 + i % 3 * .3), Math.sin(a) * radius);
+        dummy.position.set(Math.cos(a) * radius, .25 + Math.sin(age * Math.PI) * (1.3 + i % 3 * .3), Math.sin(a) * radius + (t >= 68 ? state.booster.z : 0));
         const size = (.2 + Math.sin(age * Math.PI) * 1.45) * state.smoke;
         dummy.scale.set(size * 1.4, size * .7, size); dummy.updateMatrix(); smoke.setMatrixAt(i, dummy.matrix);
       }
       smoke.instanceMatrix.needsUpdate = true;
-      const boosterTarget = new THREE.Vector3(state.booster.x - Math.sin(state.booster.angle) * 3.5, state.booster.y + Math.cos(state.booster.angle) * 3.5, 0);
-      const shipTarget = new THREE.Vector3(state.ship.x - Math.sin(state.ship.angle) * 2.5, state.ship.y + Math.cos(state.ship.angle) * 2.5, 0);
+      const boosterTarget = new THREE.Vector3(state.booster.x - Math.sin(state.booster.angle) * 3.5, state.booster.y + Math.cos(state.booster.angle) * 3.5, state.booster.z);
+      const shipTarget = new THREE.Vector3(state.ship.x - Math.sin(state.ship.angle) * 2.5, state.ship.y + Math.cos(state.ship.angle) * 2.5, state.ship.z);
       target.copy(boosterTarget);
       let distance = 26, altitude = state.booster.altitude, radialX = 0;
       if (p.cameraMode === 'ship' || (p.cameraMode === 'cinematic' && t >= 91)) {
