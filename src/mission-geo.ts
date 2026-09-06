@@ -36,6 +36,21 @@ export function enuToEcef(localM: XYZ, origin: GeoPoint): XYZ {
   const p = geodeticToEcef(origin), b = enuBasis(origin);
   return { x: p.x + localM.x * b.east.x + localM.y * b.north.x + localM.z * b.up.x, y: p.y + localM.x * b.east.y + localM.y * b.north.y + localM.z * b.up.y, z: p.z + localM.x * b.east.z + localM.y * b.north.z + localM.z * b.up.z };
 }
+export function ecefDirectionToEnu(direction: XYZ, origin: GeoPoint): XYZ {
+  const b = enuBasis(origin), dot = (a: XYZ) => a.x * direction.x + a.y * direction.y + a.z * direction.z;
+  return { x: dot(b.east), y: dot(b.north), z: dot(b.up) };
+}
+export function ecefToEnu(position: XYZ, origin: GeoPoint): XYZ {
+  const p = geodeticToEcef(origin);
+  return ecefDirectionToEnu({ x: position.x - p.x, y: position.y - p.y, z: position.z - p.z }, origin);
+}
+export function localToGeo(local: XYZ, origin: GeoPoint): GeoPoint {
+  return ecefToGeodetic(enuToEcef({ x: local.x * METERS_PER_LOCAL_UNIT, y: -local.z * METERS_PER_LOCAL_UNIT, z: local.y * METERS_PER_LOCAL_UNIT }, origin));
+}
+export function geoToLocal(geo: GeoPoint, origin: GeoPoint): XYZ {
+  const p = ecefToEnu(geodeticToEcef(geo), origin);
+  return { x: p.x / METERS_PER_LOCAL_UNIT, y: p.z / METERS_PER_LOCAL_UNIT, z: -p.y / METERS_PER_LOCAL_UNIT };
+}
 export function ecefToGlobe(p: XYZ): XYZ { return { x: p.x / METERS_PER_GLOBE_UNIT, y: p.z / METERS_PER_GLOBE_UNIT, z: -p.y / METERS_PER_GLOBE_UNIT }; }
 export function geoToGlobe(p: GeoPoint): XYZ { return ecefToGlobe(geodeticToEcef(p)); }
 

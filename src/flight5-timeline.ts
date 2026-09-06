@@ -1,10 +1,14 @@
-import { interpolateGeo, type GeoPoint } from './mission-geo.ts';
+import { interpolateGeo, localToGeo, type GeoPoint } from './mission-geo.ts';
+import { captureState } from './mission-data.ts';
 
 export const FLIGHT5_EPOCH = '2024-10-13T12:25:00Z';
 export const OVERVIEW_DURATION = 200;
 export const STARBASE: GeoPoint = { lat: 25.997, lon: -97.155, altitudeM: 0 };
-export type OverviewCamera = 'global' | 'ship' | 'booster';
-export const overviewCameras: { id: OverviewCamera; name: string }[] = [{ id: 'global', name: '地球总览' }, { id: 'ship', name: '上面级跟踪' }, { id: 'booster', name: '发射场区域' }];
+export type OverviewCamera = 'global' | 'ship' | 'booster' | 'return' | 'ground';
+export const overviewCameras: { id: OverviewCamera; name: string }[] = [{ id: 'global', name: '地球总览' }, { id: 'ship', name: '上面级跟踪' }, { id: 'booster', name: '发射场区域' }, { id: 'return', name: 'B12 返回近景' }, { id: 'ground', name: 'B12 地面长焦' }];
+export const isReturnCamera = (camera: OverviewCamera) => camera === 'return' || camera === 'ground';
+export const captureClipAt = (seconds: number) => Math.max(0, Math.min(35, (seconds - 390) * 23 / 24));
+export const returnCameraAvailable = (seconds: number) => seconds >= 223;
 export const timelineSources = [
   { id: 'jsr838', name: 'Jonathan’s Space Report 838', date: '2024-10-25', url: 'https://planet4589.org/space/jsr/back/news.838.txt', scope: '飞后记录：约 69 km 分离、助推器捕获、约 212 km 远地点与约 65 分钟后溅落。正文与表格的远地点有 1 km 差异。' },
   { id: 'schedule', name: 'Flight 5 公开事件表', date: '核对于 2026-09-06', url: 'https://en.wikipedia.org/wiki/Starship_flight_test_5#Flight_timeline', scope: '二级资料中的 SpaceX 计划时间表，不视为实飞秒级遥测。动画据此安排事件；捕获精确秒数存在资料差异。' },
@@ -37,7 +41,8 @@ type ControlPoint = GeoPoint & { t: number; kind: 'authored' };
 const point = (t: number, lat: number, lon: number, altitudeM: number): ControlPoint => ({ t, lat, lon, altitudeM, kind: 'authored' });
 // Every coordinate is authored. Published scalar heights do NOT establish an
 // observed position/time sample. Do not export these as telemetry or a TLE.
-export const boosterGuide: readonly ControlPoint[] = [point(0, STARBASE.lat, STARBASE.lon, 0), point(160, 26, -96.45, 69000), point(223, 26.04, -96.2, 95000), point(300, 26.03, -96.7, 56000), point(390, 25.998, -97.15, 1200), point(414, STARBASE.lat, STARBASE.lon, 0), point(3940, STARBASE.lat, STARBASE.lon, 0)];
+const approach = localToGeo(captureState(0), STARBASE), supported = localToGeo(captureState(35), STARBASE);
+export const boosterGuide: readonly ControlPoint[] = [point(0, STARBASE.lat, STARBASE.lon, 0), point(160, 26, -96.45, 69000), point(223, 26.04, -96.2, 95000), point(300, 26.03, -96.7, 56000), point(380, 25.998, -97.15, 1200), point(390, approach.lat, approach.lon, approach.altitudeM), point(414, supported.lat, supported.lon, supported.altitudeM), point(3940, supported.lat, supported.lon, supported.altitudeM)];
 export const shipGuide: readonly ControlPoint[] = [point(0, STARBASE.lat, STARBASE.lon, 0), point(160, 26, -96.45, 69000), point(507, 24, -80, 150000), point(1400, 10, -28, 212000), point(2200, -10, 28, 180000), point(2883, -23, 67, 95000), point(3500, -25, 92, 40000), point(3915, -24, 100, 1500), point(3940, -24, 100, 0)];
 export function guidePosition(points: readonly ControlPoint[], seconds: number): GeoPoint {
   const t = Number.isFinite(seconds) ? Math.max(points[0].t, Math.min(points.at(-1)!.t, seconds)) : points[0].t;
@@ -48,7 +53,10 @@ export function guidePosition(points: readonly ControlPoint[], seconds: number):
 }
 export function flight5State(time: number) {
   const seconds = missionSecondsAt(time);
-  return { seconds, date: missionDate(seconds), separated: seconds >= 160, caught: seconds >= 414, splashed: seconds >= 3940, booster: guidePosition(boosterGuide, seconds), ship: guidePosition(shipGuide, seconds), positionKind: 'authored-interpolation' as const, measuredTelemetry: null };
+  return { seconds, date: missionDate(seconds), separated: seconds >= 160, caught: seconds >= 414, splashed: seconds >= 3940, booster: boosterPositionAt(seconds), ship: guidePosition(shipGuide, seconds), positionKind: 'authored-interpolation' as const, measuredTelemetry: null };
+}
+export function boosterPositionAt(seconds: number): GeoPoint {
+  return seconds >= 390 ? localToGeo(captureState(captureClipAt(seconds)), STARBASE) : guidePosition(boosterGuide, seconds);
 }
 export function parseOverviewHash(hash: string) {
   const q = new URLSearchParams(hash.split('?')[1] || ''), c = q.get('camera');

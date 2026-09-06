@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { geodeticToEcef, ecefToGeodetic, enuBasis, enuToEcef, ecefToGlobe, geoToGlobe, interpolateGeo, sunDirectionEcef, solarElevation, WGS84_A, WGS84_B, daylightLabel, METERS_PER_LOCAL_UNIT } from '../src/mission-geo.ts';
-import { overviewEvents, overviewEventAt, missionSecondsAt, missionDate, guidePosition, flight5State, shipGuide, boosterGuide, STARBASE, timelineSources, parseOverviewHash, overviewHash, OVERVIEW_DURATION } from '../src/flight5-timeline.ts';
+import * as THREE from 'three';
+import { createLaunchSite, createCatchPins } from '../src/launch-site.ts';
+import { geodeticToEcef, ecefToGeodetic, enuBasis, enuToEcef, ecefToGlobe, geoToGlobe, geoToLocal, localToGeo, interpolateGeo, sunDirectionEcef, solarElevation, WGS84_A, WGS84_B, daylightLabel, METERS_PER_LOCAL_UNIT } from '../src/mission-geo.ts';
+import { overviewEvents, overviewEventAt, missionSecondsAt, missionDate, guidePosition, flight5State, boosterPositionAt, captureClipAt, returnCameraAvailable, shipGuide, boosterGuide, STARBASE, timelineSources, parseOverviewHash, overviewHash, OVERVIEW_DURATION } from '../src/flight5-timeline.ts';
+import { captureSite, captureState } from '../src/mission-data.ts';
 const near = (a, b, epsilon = 1e-6) => assert.ok(Math.abs(a - b) < epsilon, `${a} != ${b}`);
 const dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
 
@@ -47,7 +50,7 @@ test('all coordinate guides are authored, never measured samples', () => {
 test('both stages share their pre-separation position and return stays at Starbase', () => {
   for (let t = 0; t <= 160; t += 2) assert.deepEqual(guidePosition(shipGuide, t), guidePosition(boosterGuide, t));
   assert.equal(flight5State(19.9).separated, false); assert.equal(flight5State(20).separated, true);
-  const state = flight5State(100); assert.equal(state.caught, true); near(state.booster.lat, STARBASE.lat); near(state.booster.lon, STARBASE.lon);
+  const state = flight5State(100); assert.equal(state.caught, true); assert.ok(Math.abs(state.booster.lat - STARBASE.lat) < .001); assert.ok(Math.abs(state.booster.lon - STARBASE.lon) < .001); assert.ok(state.booster.altitudeM > 60);
   assert.equal(flight5State(180).splashed, true);
 });
 test('position interpolation has no jumps at guide boundaries', () => {
@@ -66,4 +69,40 @@ test('narration has two complete voices and fits every playback chapter', () => 
   const manifest = JSON.parse(readFileSync('src/overview-audio.json', 'utf8'));
   assert.deepEqual(Object.keys(manifest.audio), ['yunxi', 'xiaoxiao']);
   for (const cues of Object.values(manifest.audio)) { assert.equal(cues.length, 10); cues.forEach((cue, i) => { assert.equal(cue.text, overviewEvents[i].text); assert.ok(cue.duration > 1 && cue.duration < 19.8); assert.ok(cue.src.startsWith('/narration/')); }); }
+});
+test('global and capture-local positions agree to submillimetre precision', () => {
+  for (let seconds = 390; seconds <= 430; seconds += .1) {
+    const actual = geoToLocal(boosterPositionAt(seconds), STARBASE), expected = captureState(captureClipAt(seconds));
+    for (const key of ['x', 'y', 'z']) near(actual[key], expected[key], .00001);
+  }
+  for (const p of [{ x: 30, y: 1.8, z: 100 }, { x: 9000, y: 10000, z: -1000 }]) {
+    const result = geoToLocal(localToGeo(p, STARBASE), STARBASE);
+    for (const key of ['x', 'y', 'z']) near(result[key], p[key], .00001);
+  }
+});
+test('capture clock and geographic approach join without teleporting', () => {
+  near(captureClipAt(414), 23); assert.equal(returnCameraAvailable(222.9), false); assert.equal(returnCameraAvailable(223), true);
+  for (const seconds of [380, 390, 414, 426.6]) {
+    const a = geodeticToEcef(boosterPositionAt(seconds - .0001)), b = geodeticToEcef(boosterPositionAt(seconds + .0001));
+    assert.ok(Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z) < 1);
+  }
+  for (const camera of ['return', 'ground']) assert.deepEqual(parseOverviewHash(overviewHash(91.2, camera)), { time: 91.2, camera });
+});
+test('converted global endpoint still seats both physical pin meshes on the rails', () => {
+  const material = new THREE.MeshBasicMaterial(), site = createLaunchSite(material, material, material, captureSite), pins = createCatchPins(material, captureSite.catch);
+  for (const seconds of [414, 415, 426.6, 507, 3940]) {
+    const pose = captureState(captureClipAt(seconds)), local = geoToLocal(boosterPositionAt(seconds), STARBASE);
+    site.update(pose); site.root.updateMatrixWorld(true);
+    pins.position.set(local.x, local.y, local.z); pins.rotation.z = pose.angle; pins.updateMatrixWorld(true);
+    for (let i = 0; i < 2; i++) {
+      let contacts = 0;
+      for (const x of [-.06, 0, .06]) for (const z of [-.1, 0, .1]) {
+        const point = pins.children[i].localToWorld(new THREE.Vector3(x, -captureSite.catch.pinHeight / 2, z));
+        const ray = new THREE.Raycaster(point.clone().add(new THREE.Vector3(0, .1, 0)), new THREE.Vector3(0, -1, 0));
+        const hit = ray.intersectObject(site.arms[i].rail)[0];
+        if (hit && Math.abs(hit.point.y - point.y) < 1e-6) contacts++;
+      }
+      assert.ok(contacts >= 3, `pin ${i} at ${seconds}: ${contacts} bearing samples`);
+    }
+  }
 });

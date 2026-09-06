@@ -19,6 +19,7 @@
     "test:capture": "node --experimental-strip-types --test scripts/capture.test.mjs",
     "test:geo": "node --experimental-strip-types --test scripts/mission-geo.test.mjs",
     "test:overview": "node scripts/verify-overview.mjs",
+    "test:return": "node scripts/verify-return.mjs",
     "test:mission": "node scripts/verify-mission.mjs",
     "test:narration": "node scripts/verify-narration.mjs",
     "test:narration-layout": "node scripts/verify-narration-layout.mjs",

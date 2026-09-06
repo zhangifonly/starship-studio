@@ -1,5 +1,7 @@
 .overview-workspace { --ship: #ace0d7; --booster: #e5bc82; }
 .overview-stage { background: #080d10; min-height: 320px; }
+.return-stage .overview-clock, .return-stage .overview-legend { background: #142328df; padding: 7px; border-radius: 3px; }
+.return-stage .overview-render-note { background: #142328df; color: #d2e3e4; padding: 4px 6px; }
 .overview-clock { position: absolute; top: 18px; left: 20px; display: flex; flex-direction: column; gap: 7px; pointer-events: none; }
 .overview-clock small { font-size: 9px; color: #a3b5b8; }.overview-clock output { font: 23px 'IBM Plex Mono', monospace; color: #e4eeec; }.overview-clock > span { font-size: 10px; color: #96a5a7; }
 .overview-legend { position: absolute; right: 18px; top: 20px; display: flex; flex-direction: column; gap: 9px; font-size: 10px; color: #acbcbc; pointer-events: none; }.overview-legend span { display: flex; align-items: center; gap: 7px; }.overview-legend i { width: 15px; height: 2px; background: currentColor; }.ship-key { color: var(--ship); }.booster-key { color: var(--booster); }

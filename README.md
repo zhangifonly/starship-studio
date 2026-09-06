@@ -41,6 +41,7 @@ npm run dev
 - 35 秒捕获重建片段、同场景双机位、承力点高亮、来源与照片对照。
 - 任务时刻分享、独立中英文资料边界说明、五段中文任务解说。
 - 200 秒全程地理复盘、十个事件、两级独立航迹、三种区域机位与发射场小视窗。
+- B12 抛环后的返回近景与固定地面长焦；共享全球坐标、捕获末段及 S30 地球小视窗。
 - WGS84 地球、基于近似任务 UTC 的太阳方位；明确区分计划时间和飞后记录。
 
 历史复盘中的 00:00-00:35 是片段时间，不是发射后 T+ 遥测。模型坐标、
@@ -93,12 +94,15 @@ npm run test:narration
 npm run test:platform
 npm run test:mission
 npm run test:overview
+npm run test:return
 # 无生成音频的干净克隆
 node scripts/verify-mission.mjs --visual-only
 node scripts/verify-overview.mjs --visual-only
+node scripts/verify-return.mjs --visual-only
 # WebKit
 node scripts/verify-mission.mjs --webkit
 node scripts/verify-overview.mjs --webkit
+node scripts/verify-return.mjs --webkit
 ```
 
 浏览器测试检查实际画面像素、交互、移动端布局与音频播放状态。
