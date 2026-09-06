@@ -3,14 +3,17 @@ import { launchPhases, phaseAt } from './launch-timeline';
 import manifest from './narration-audio.json';
 
 export type Narrator = keyof typeof manifest.audio;
+export type NarrationTrack = { starts: readonly number[]; audio: Record<Narrator, readonly { src: string; duration: number }[]> };
 
-export function useNarration(enabled: boolean, playing: boolean, time: number, rate: number, seekVersion: number, voice: Narrator) {
+export function useNarration(enabled: boolean, playing: boolean, time: number, rate: number, seekVersion: number, voice: Narrator, track?: NarrationTrack) {
   const audio = useRef<HTMLAudioElement>(null);
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const phase = phaseAt(time), cue = manifest.audio[voice][phase];
-  const latest = useRef({ enabled, playing, time, rate, phase });
-  latest.current = { enabled, playing, time, rate, phase };
+  const phase = track ? track.starts.reduce((index, start, i) => time >= start ? i : index, 0) : phaseAt(time);
+  const cue = (track?.audio ?? manifest.audio)[voice][phase];
+  const start = track ? track.starts[phase] : launchPhases[phase].start;
+  const latest = useRef({ enabled, playing, time, rate, start });
+  latest.current = { enabled, playing, time, rate, start };
   const sync = useRef<(force?: boolean) => void>(() => {});
 
   useEffect(() => {
@@ -20,7 +23,7 @@ export function useNarration(enabled: boolean, playing: boolean, time: number, r
     const synchronize = (force = false) => {
       if (disposed) return;
       const state = latest.current;
-      const offset = Math.max(0, state.time - launchPhases[state.phase].start);
+      const offset = Math.max(0, state.time - state.start);
       element.playbackRate = state.rate; element.preservesPitch = true;
       const target = Math.min(offset, element.duration || cue.duration);
       if (element.readyState >= 1 && Math.abs(element.currentTime - target) > (force ? .05 : .45)) element.currentTime = target;

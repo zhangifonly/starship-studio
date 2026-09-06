@@ -20,6 +20,19 @@ Consult each installed package's license for its full terms and notices.
   source URLs are in `public/textures/README.md`; the upstream MIT notice is
   retained at `public/textures/THREE-LICENSE.txt`.
 
+## Flight 5 Reference Photograph
+
+`public/missions/flight5-approach.jpg`: "Starship Booster Return on Final Approach"
+by Steve Jurvetson (2024-10-13), CC BY 2.0. Resized to 1200 px wide, not cropped
+or color graded. Attribution and links are shown in the task evidence view.
+
+- Source: https://commons.wikimedia.org/wiki/File:Starship_Booster_Return_on_Final_Approach_(54063904149).jpg
+- Original: https://www.flickr.com/photos/jurvetson/54063904149/
+- License: https://creativecommons.org/licenses/by/2.0/
+
+This photograph is not covered by the project's MIT license. Its license does
+not provide a license to the underlying vehicle design.
+
 ## Materials Not Distributed
 
 - The FAA-hosted PDF, extracted diagram and page raster contain SpaceX proprietary

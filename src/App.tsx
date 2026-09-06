@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDownToLine, ArrowUpRight, Box, ChevronRight, CircleDot, Crosshair, Expand, Eye, FileText, Layers3, Maximize, Minus, Orbit, Plus, RotateCcw, Rocket, ScanLine, Search, SlidersHorizontal, X } from 'lucide-react';
 import RocketScene, { type SceneHandle } from './RocketScene';
 import LaunchView from './LaunchView';
@@ -7,13 +7,15 @@ import { parts, sourceUrl, type PartId, type VehicleMode } from './parts';
 
 const referencesAvailable = Boolean(import.meta.env.REFERENCE_ASSETS_AVAILABLE);
 const referencePdf = referencesAvailable ? '/references/faa-starship-reentry-2023.pdf#page=39' : 'https://www.faa.gov/media/27236#page=39';
+const MissionView = lazy(() => import('./MissionView'));
+const experienceFromHash = () => location.hash.startsWith('#mission') ? 'mission' : location.hash === '#launch' ? 'launch' : 'structure';
 
 function Tool({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: ReactNode }) {
   return <button className={`tool ${active ? 'active' : ''}`} aria-label={label} title={label} aria-pressed={active} onClick={onClick}>{children}<span className="tooltip">{label}</span></button>;
 }
 
 export default function App() {
-  const [experience, setExperience] = useState<'structure' | 'launch'>(() => location.hash === '#launch' ? 'launch' : 'structure');
+  const [experience, setExperience] = useState<'structure' | 'launch' | 'mission'>(experienceFromHash);
   const [mode, setMode] = useState<VehicleMode>('stack');
   const [selected, setSelected] = useState<PartId | null>(null);
   const [explode, setExplode] = useState(0);
@@ -33,7 +35,7 @@ export default function App() {
   const sourceDialog = useRef<HTMLDialogElement>(null);
   const part = parts.find(p => p.id === selected);
   useEffect(() => {
-    const sync = () => setExperience(location.hash === '#launch' ? 'launch' : 'structure');
+    const sync = () => setExperience(experienceFromHash());
     window.addEventListener('hashchange', sync); return () => window.removeEventListener('hashchange', sync);
   }, []);
   const filtered = parts.filter(p => (mode === 'stack' || p.stage === mode) && `${p.name} ${p.english}`.toLowerCase().includes(query.toLowerCase()));
@@ -48,11 +50,11 @@ export default function App() {
   return <main className={`studio${experience === 'launch' ? ' launch-experience' : ''}`} ref={root}>
     <header className="app-header">
       <a className="brand" href="/" aria-label="星舰工作室首页"><Orbit size={24} strokeWidth={1.4}/><span>星舰<span className="brand-sub">工作室</span></span></a>
-      <nav className="experience-tabs" aria-label="工作室模式"><a href="#structure" aria-current={experience === 'structure' ? 'page' : undefined}><Layers3 size={15}/>结构探索</a><a href="#launch" aria-current={experience === 'launch' ? 'page' : undefined}><Rocket size={15}/>发射演示</a></nav>
+      <nav className="experience-tabs" aria-label="工作室模式"><a href="#structure" aria-current={experience === 'structure' ? 'page' : undefined}><Layers3 size={15}/>结构探索</a><a href="#launch" aria-current={experience === 'launch' ? 'page' : undefined}><Rocket size={15}/>发射演示</a><a href="#mission/flight-5" aria-current={experience === 'mission' ? 'page' : undefined}><Orbit size={15}/>任务复盘</a></nav>
       <button className="source-button" onClick={() => sourceDialog.current?.showModal()}><FileText size={15}/><span>参考图纸</span><ArrowUpRight size={13}/></button>
     </header>
 
-    {experience === 'launch' ? <LaunchView onFullscreen={fullscreen}/> : engineOpen ? <EngineView onClose={()=>setEngineOpen(false)}/> : <><div className="workspace">
+    {experience === 'mission' ? <Suspense fallback={<p role="status">任务资料载入中…</p>}><MissionView onFullscreen={fullscreen}/></Suspense> : experience === 'launch' ? <LaunchView onFullscreen={fullscreen}/> : engineOpen ? <EngineView onClose={()=>setEngineOpen(false)}/> : <><div className="workspace">
       <aside className={`catalog ${mobilePanel === 'parts' ? 'mobile-open' : ''}`} aria-label="部件目录">
         <div className="catalog-intro"><div className="eyebrow">SpaceX / 运载火箭研究</div><h1>星舰</h1><div className="vehicle-subtitle">星舰 · 超级重型运载系统</div><span className="version-badge"><span/> 第三代（V3）构型参考</span><button className="mobile-close tool" aria-label="关闭部件目录" onClick={() => setMobilePanel(null)}><X size={18}/></button></div>
         <div className="catalog-heading"><span>系统部件</span><span className="mono">{String(filtered.length).padStart(2, '0')}</span></div>
@@ -112,7 +114,7 @@ export default function App() {
       </aside>
     </div>
     <nav className="mobile-nav" aria-label="移动端面板"><button aria-pressed={mobilePanel === 'parts'} onClick={() => setMobilePanel(mobilePanel === 'parts' ? null : 'parts')}><Layers3 size={17}/>部件目录</button><button aria-pressed={mobilePanel === 'detail'} onClick={() => setMobilePanel(mobilePanel === 'detail' ? null : 'detail')}><FileText size={17}/>{part ? '部件详情' : '系统概览'}</button></nav></>}
-    <footer className="status-bar"><span><span className="status-dot"/> {experience === 'launch' ? '发射过程示意' : ready ? '模型已就绪' : '模型载入中'}</span><span>SpaceX 星舰<span className="footer-separator">/</span>独立工程研究</span><span>资料核对 · 2026.09</span></footer>
+    <footer className="status-bar"><span><span className="status-dot"/> {experience === 'mission' ? '历史任务 · 视觉重建' : experience === 'launch' ? '发射过程示意' : ready ? '模型已就绪' : '模型载入中'}</span><span>SpaceX 星舰<span className="footer-separator">/</span>独立工程研究</span><span>资料核对 · 2026.09</span></footer>
     {notice && <div className="toast" role="status">{notice}</div>}
 
     <dialog ref={sourceDialog} className="sources-dialog" onClick={e => { if (e.target === sourceDialog.current) sourceDialog.current.close(); }}>

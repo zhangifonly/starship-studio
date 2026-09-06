@@ -7,7 +7,7 @@ export const launchSite = {
   catch: { x: 1.9, z: 0, baseY: 4.2, pinBottom: 6.5, pinHeight: .12, pinReach: .76, pinRoot: .42 },
   arms: { parkedY: 5.8, carriageX: .9, pivotHalfGap: .88, halfGap: .62, width: .2, thickness: .16, length: 4.95, openAngle: .36 },
   qd: { x: -2.72, z: -.66, y: 9.55, tipX: -.43, tipZ: -.13, retractAngle: .95 },
-} as const;
+};
 
 export const catchRailY = launchSite.catch.baseY + launchSite.catch.pinBottom - launchSite.arms.thickness / 2;
 export const launchRailY = launchSite.launchBaseY + launchSite.catch.pinBottom - launchSite.arms.thickness / 2;

@@ -13,4 +13,5 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:timeline
+      - run: npm run test:capture
       - run: npm run build

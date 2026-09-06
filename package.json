@@ -16,11 +16,14 @@
     "test:launch-site": "node scripts/verify-launch-site.mjs",
     "test:platform": "node scripts/verify-platform.mjs",
     "test:timeline": "node --experimental-strip-types --test scripts/launch-timeline.test.mjs",
+    "test:capture": "node --experimental-strip-types --test scripts/capture.test.mjs",
+    "test:mission": "node scripts/verify-mission.mjs",
     "test:narration": "node scripts/verify-narration.mjs",
     "test:narration-layout": "node scripts/verify-narration-layout.mjs",
     "test:engine": "node scripts/verify-engine.mjs",
     "test:public": "node scripts/verify-public.mjs",
-    "narration:plan": "node --experimental-strip-types scripts/export-narration.mjs"
+    "narration:plan": "node --experimental-strip-types scripts/export-narration.mjs",
+    "narration:capture": "node --experimental-strip-types scripts/export-capture-narration.mjs"
   },
   "dependencies": {
     "lucide-react": "1.31.0",

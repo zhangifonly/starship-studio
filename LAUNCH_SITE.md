@@ -26,7 +26,7 @@
 
 ## 参考与边界
 
-- [Flight 5 返回照片（SpaceX，经 Wikimedia Commons）](https://commons.wikimedia.org/wiki/File:Starship_Booster_Return_on_Final_Approach_(54063904149).jpg)：核对塔架、双臂、发射台与下降箭体的位置关系。
+- [Flight 5 返回照片（Steve Jurvetson，CC BY 2.0，经 Wikimedia Commons）](https://commons.wikimedia.org/wiki/File:Starship_Booster_Return_on_Final_Approach_(54063904149).jpg)：2024-10-13 返回末段，用于观察塔架、双臂、发射台与下降箭体的投影关系，不能由单张透视照片确定精确三维尺寸。
 - [Flight 5 飞行记录及来源](https://en.wikipedia.org/wiki/Starship_flight_test_5)：返回末段对准双臂并捕获的动作顺序。
 - [Everyday Astronaut 的 Starbase 访谈](https://everydayastronaut.com/starbase-tour-and-interview-with-elon-musk/)：Super Heavy 的栅格翼上升时保持展开，不沿用 Falcon 9 的折叠方式。
 - [Starship full stack 现场照片](https://commons.wikimedia.org/wiki/File:Starship_full_stack.jpg)：核对六腿发射台、塔身转角、堆叠箭体、双臂桁架与独立脐带臂。

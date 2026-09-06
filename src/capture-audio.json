@@ -1,0 +1,66 @@
+{
+  "provider": "Microsoft Edge TTS",
+  "voices": {
+    "yunxi": "zh-CN-YunxiNeural",
+    "xiaoxiao": "zh-CN-XiaoxiaoNeural"
+  },
+  "rate": "+0%",
+  "volume": "+0%",
+  "pitch": "+0Hz",
+  "audio": {
+    "yunxi": [
+      {
+        "src": "/narration/yunxi/flight5-capture-1-f5fbd904236b.mp3",
+        "duration": 7.68,
+        "text": "这是第五次试飞的助推器返回末段。热分离环已经抛离，发动机正在减速。"
+      },
+      {
+        "src": "/narration/yunxi/flight5-capture-2-026f9237649e.mp3",
+        "duration": 7.44,
+        "text": "助推器调整水平位置，对准机械臂之间的走廊。四片栅格翼仍然展开。"
+      },
+      {
+        "src": "/narration/yunxi/flight5-capture-3-fc2b6a6ca26b.mp3",
+        "duration": 6.312,
+        "text": "观察箭体上部的承力销。机械臂承接支点，不是夹紧箭体。"
+      },
+      {
+        "src": "/narration/yunxi/flight5-capture-4-a3bc5517aa03.mp3",
+        "duration": 4.032,
+        "text": "承力销接触支承面，主发动机关机。"
+      },
+      {
+        "src": "/narration/yunxi/flight5-capture-5-262fb599df95.mp3",
+        "duration": 6.744,
+        "text": "捕获完成，发动机仍然悬空。后续转运和检查不在这个片段内。"
+      }
+    ],
+    "xiaoxiao": [
+      {
+        "src": "/narration/xiaoxiao/flight5-capture-1-42d3d125233a.mp3",
+        "duration": 7.728,
+        "text": "这是第五次试飞的助推器返回末段。热分离环已经抛离，发动机正在减速。"
+      },
+      {
+        "src": "/narration/xiaoxiao/flight5-capture-2-0b0f1c8df54c.mp3",
+        "duration": 7.584,
+        "text": "助推器调整水平位置，对准机械臂之间的走廊。四片栅格翼仍然展开。"
+      },
+      {
+        "src": "/narration/xiaoxiao/flight5-capture-3-3e5b4a4af250.mp3",
+        "duration": 6.24,
+        "text": "观察箭体上部的承力销。机械臂承接支点，不是夹紧箭体。"
+      },
+      {
+        "src": "/narration/xiaoxiao/flight5-capture-4-f32a4b4cb8d4.mp3",
+        "duration": 3.888,
+        "text": "承力销接触支承面，主发动机关机。"
+      },
+      {
+        "src": "/narration/xiaoxiao/flight5-capture-5-a6b88966c51d.mp3",
+        "duration": 6.72,
+        "text": "捕获完成，发动机仍然悬空。后续转运和检查不在这个片段内。"
+      }
+    ]
+  }
+}

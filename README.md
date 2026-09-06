@@ -5,6 +5,9 @@
 
 [在线体验](https://spacex.whaty.org/) · [发射演示](https://spacex.whaty.org/#launch) · [MIT 许可证](LICENSE)
 
+升级任务与验收状态见 [UPGRADE_PLAN.md](UPGRADE_PLAN.md)。本地新增入口
+`#mission/flight-5` 为 Flight 5 末段捕获复盘；是否发布以部署记录为准。
+
 ## 本地运行
 
 需要 Node.js 22.13+ 和 npm，不需要数据库或 API 密钥。
@@ -31,6 +34,13 @@ npm run dev
 - 海上平台船体、甲板标线、护栏、设备舱与概念着陆支架。
 - NASA 地球底图、云层、大气、海面及程序化推进效果。
 - 桌面与移动端界面。
+- Flight 5 / B12 独立历史任务资料，四栅格翼、无热分离环的返回外观。
+- 35 秒捕获重建片段、同场景双机位、承力点高亮、来源与照片对照。
+- 任务时刻分享、独立中英文资料边界说明、五段中文任务解说。
+
+历史复盘中的 00:00-00:35 是片段时间，不是发射后 T+ 遥测。模型坐标、
+收臂动作与下降曲线是可回放的视觉重建。现场照片用于外观对照，不用于
+单张照片测绘；照片摄于返回末段，不是捕获后的照片。
 
 ## 中文解说
 
@@ -48,6 +58,10 @@ python3 -m venv .venv-tts
 .venv-tts/bin/pip install -r scripts/tts-requirements.txt
 npm run narration:plan
 .venv-tts/bin/python scripts/generate-narration.py
+
+# 独立的 Flight 5 捕获片段
+npm run narration:capture
+.venv-tts/bin/python scripts/generate-narration.py --plan public/narration/capture-plan.json --manifest src/capture-audio.json
 ```
 
 生成后重启开发服务器或重新构建，自动启用默认有声解说。
@@ -57,6 +71,7 @@ npm run narration:plan
 
 ```sh
 npm run test:timeline
+npm run test:capture
 npm run build
 npx playwright install chromium webkit
 # 以下命令需要另一个终端保持开发服务器运行
@@ -66,6 +81,11 @@ npm run test:launch
 # 生成音频后运行
 npm run test:narration
 npm run test:platform
+npm run test:mission
+# 无生成音频的干净克隆
+node scripts/verify-mission.mjs --visual-only
+# WebKit
+node scripts/verify-mission.mjs --webkit
 ```
 
 浏览器测试检查实际画面像素、交互、移动端布局与音频播放状态。

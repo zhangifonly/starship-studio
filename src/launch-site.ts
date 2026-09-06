@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { launchSite } from './launch-site-layout.ts';
 
-export function createLaunchSite(steel: THREE.Material, dark: THREE.Material, white: THREE.Material) {
+export function createLaunchSite(steel: THREE.Material, dark: THREE.Material, white: THREE.Material, config = launchSite) {
   const root = new THREE.Group();
   function box(parent: THREE.Object3D, size: [number, number, number], at: [number, number, number], material = steel) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(...size), material); m.position.set(...at); parent.add(m); return m;
@@ -12,14 +12,14 @@ export function createLaunchSite(steel: THREE.Material, dark: THREE.Material, wh
     m.position.copy(from).add(to).multiplyScalar(.5);
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.sub(from).normalize()); parent.add(m);
   }
-  const { pad, tower: layout, arms: spec } = launchSite;
+  const { pad, tower: layout, arms: spec } = config;
   const mount = new THREE.Group(); mount.position.set(pad.x, 0, pad.z); root.add(mount);
   const ring = new THREE.Shape(); ring.absarc(0, 0, pad.radius, 0, Math.PI * 2, false);
   const opening = new THREE.Path(); opening.absarc(0, 0, pad.opening, 0, Math.PI * 2, true); ring.holes.push(opening);
   const deck = new THREE.Mesh(new THREE.ExtrudeGeometry(ring, { depth: pad.deckTop - pad.deckBottom, bevelEnabled: false, curveSegments: 48 }), dark);
   deck.rotation.x = -Math.PI / 2; deck.position.y = pad.deckBottom; mount.add(deck);
   const supports: THREE.Mesh[] = [];
-  const supportTop = launchSite.launchBaseY + launchSite.skirtSupportY;
+  const supportTop = config.launchBaseY + config.skirtSupportY;
   for (let i = 0; i < 6; i++) {
     const a = i * Math.PI / 3, support = new THREE.Group(); support.rotation.y = a; mount.add(support);
     const leg = new THREE.Mesh(new THREE.CylinderGeometry(.13, .19, pad.deckBottom, 10), steel);
@@ -63,7 +63,7 @@ export function createLaunchSite(steel: THREE.Material, dark: THREE.Material, wh
     beam(pivot, [0, -1.7, side * .15], [spec.length * .55, -.85, side * .15], .09);
     return { pivot, rail, side };
   });
-  const qdSpec = launchSite.qd, qd = new THREE.Group(); qd.position.set(qdSpec.x, qdSpec.y, qdSpec.z); root.add(qd);
+  const qdSpec = config.qd, qd = new THREE.Group(); qd.position.set(qdSpec.x, qdSpec.y, qdSpec.z); root.add(qd);
   const qdLength = Math.hypot(qdSpec.tipX - qdSpec.x, qdSpec.tipZ - qdSpec.z);
   const qdHeading = -Math.atan2(qdSpec.tipZ - qdSpec.z, qdSpec.tipX - qdSpec.x);
   for (const z of [-.18, .18]) {
@@ -87,8 +87,8 @@ export function createLaunchSite(steel: THREE.Material, dark: THREE.Material, wh
   return { root, tower, mount, deck, supports, carriage, arms, qd, qdHead, update };
 }
 
-export function createCatchPins(material: THREE.Material) {
-  const root = new THREE.Group(), spec = launchSite.catch;
+export function createCatchPins(material: THREE.Material, spec = launchSite.catch) {
+  const root = new THREE.Group();
   for (const side of [-1, 1]) {
     const pin = new THREE.Mesh(new THREE.BoxGeometry(.18, spec.pinHeight, spec.pinReach - spec.pinRoot), material);
     pin.castShadow = pin.receiveShadow = true;

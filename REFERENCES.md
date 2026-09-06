@@ -75,6 +75,27 @@ used for this model's current exterior or engine counts.
 
 ## Model Limitations
 
+### Flight 5 Capture Replay
+
+The separate `#mission/flight-5` experience is a 35-second educational rebuilding
+of the final approach and capture of Booster 12 on 2024-10-13. It does not reuse
+the V3 vehicle or offshore-platform landing as historical hardware.
+
+- [Spaceflight Now, 2024-11-01](https://spaceflightnow.com/2024/11/01/starship-booster-catch-brings-nasa-spacex-closer-to-artemis-3-moon-landing/): read for the successful first tower catch, B12 and mission context.
+- [Steve Jurvetson photograph, 2024-10-13](https://commons.wikimedia.org/wiki/File:Starship_Booster_Return_on_Final_Approach_(54063904149).jpg): final approach, not post-capture; CC BY 2.0 metadata verified via the Commons API. A resized copy is distributed with attribution; see `public/missions/README.md`.
+- [Flight 5 record](https://en.wikipedia.org/wiki/Starship_flight_test_5): secondary source for B12/S30, hot-stage jettison and the Indian Ocean splashdown. Its infobox and timeline differ in the precise catch time. The reconstruction therefore does not assign an exact mission timestamp to its frames.
+
+`src/mission-data.ts` separates historical facts from authored geometry and the
+clip clock. Tower/catch/mount offsets, catch height, support dimensions, engine
+plume, body dimensions and camera positions remain approximate. Only event
+order, broad return configuration and outcome are represented as historical.
+The four-fin return model is an original simplified reconstruction, not B12 CAD.
+There is no claim that geometry tests establish surveyed real-world accuracy.
+
+The close-up shows the same world state as the main view using two scissor
+regions in one WebGL context. Pin/rail contact and hull clearance are geometric
+invariants of this reconstruction, not validated flight-control constraints.
+
 ### Launch Demonstration
 
 The launch view reuses the same sourced exterior and illustrates the general
