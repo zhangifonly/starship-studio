@@ -7,6 +7,8 @@ const narration = JSON.parse(readFileSync(new URL('./src/narration-audio.json', 
 const audioAvailable = Object.values(narration.audio).every(cues => cues.every(cue => existsSync(publicFile(cue.src))));
 const captureNarration = JSON.parse(readFileSync(new URL('./src/capture-audio.json', import.meta.url), 'utf8')) as { audio: Record<string, { src: string }[]> };
 const captureAudioAvailable = Object.keys(captureNarration.audio).length === 2 && Object.values(captureNarration.audio).every(cues => cues.length === 5 && cues.every(cue => existsSync(publicFile(cue.src))));
+const overviewNarration = JSON.parse(readFileSync(new URL('./src/overview-audio.json', import.meta.url), 'utf8')) as { audio: Record<string, { src: string }[]> };
+const overviewAudioAvailable = Object.keys(overviewNarration.audio).length === 2 && Object.values(overviewNarration.audio).every(cues => cues.length === 10 && cues.every(cue => existsSync(publicFile(cue.src))));
 const referencesAvailable = ['/references/starship-internal-structure.jpg', '/references/faa-starship-reentry-2023.pdf'].every(path => existsSync(publicFile(path)));
 
 export default defineConfig({
@@ -14,6 +16,7 @@ export default defineConfig({
   define: {
     'import.meta.env.NARRATION_AUDIO_AVAILABLE': JSON.stringify(audioAvailable),
     'import.meta.env.CAPTURE_AUDIO_AVAILABLE': JSON.stringify(captureAudioAvailable),
+    'import.meta.env.OVERVIEW_AUDIO_AVAILABLE': JSON.stringify(overviewAudioAvailable),
     'import.meta.env.REFERENCE_ASSETS_AVAILABLE': JSON.stringify(referencesAvailable),
   },
   server: { port: 3016, strictPort: true },

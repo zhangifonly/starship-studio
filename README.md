@@ -7,6 +7,9 @@
 
 升级任务与验收状态见 [UPGRADE_PLAN.md](UPGRADE_PLAN.md)。
 [Flight 5 捕获复盘](https://spacex.whaty.org/#mission/flight-5) 是独立历史任务入口。
+[Flight 5 全程航迹](https://spacex.whaty.org/#mission/flight-5/overview) 提供起飞到
+印度洋溅落的事件导航、地球视角与独立解说。数据契约与证据限度见
+[FLIGHT5_GEOGRAPHY.md](FLIGHT5_GEOGRAPHY.md)。
 
 ## 本地运行
 
@@ -37,6 +40,8 @@ npm run dev
 - Flight 5 / B12 独立历史任务资料，四栅格翼、无热分离环的返回外观。
 - 35 秒捕获重建片段、同场景双机位、承力点高亮、来源与照片对照。
 - 任务时刻分享、独立中英文资料边界说明、五段中文任务解说。
+- 200 秒全程地理复盘、十个事件、两级独立航迹、三种区域机位与发射场小视窗。
+- WGS84 地球、基于近似任务 UTC 的太阳方位；明确区分计划时间和飞后记录。
 
 历史复盘中的 00:00-00:35 是片段时间，不是发射后 T+ 遥测。模型坐标、
 收臂动作与下降曲线是可回放的视觉重建。现场照片用于外观对照，不用于
@@ -62,6 +67,10 @@ npm run narration:plan
 # 独立的 Flight 5 捕获片段
 npm run narration:capture
 .venv-tts/bin/python scripts/generate-narration.py --plan public/narration/capture-plan.json --manifest src/capture-audio.json
+
+# 独立的 Flight 5 全程航迹
+npm run narration:overview
+.venv-tts/bin/python scripts/generate-narration.py --plan public/narration/overview-plan.json --manifest src/overview-audio.json
 ```
 
 生成后重启开发服务器或重新构建，自动启用默认有声解说。
@@ -72,6 +81,7 @@ npm run narration:capture
 ```sh
 npm run test:timeline
 npm run test:capture
+npm run test:geo
 npm run build
 npx playwright install chromium webkit
 # 以下命令需要另一个终端保持开发服务器运行
@@ -82,10 +92,13 @@ npm run test:launch
 npm run test:narration
 npm run test:platform
 npm run test:mission
+npm run test:overview
 # 无生成音频的干净克隆
 node scripts/verify-mission.mjs --visual-only
+node scripts/verify-overview.mjs --visual-only
 # WebKit
 node scripts/verify-mission.mjs --webkit
+node scripts/verify-overview.mjs --webkit
 ```
 
 浏览器测试检查实际画面像素、交互、移动端布局与音频播放状态。
@@ -105,7 +118,9 @@ FAA 原图带 SpaceX 专有资料标记，不随仓库分发；公开版本通�
 
 这是独立科普可视化，不是 SpaceX 官方产品，也不是开放制造 CAD。
 V3 构型、猛禽内部结构、孔数、尺寸与管路包含示意性重建。飞行时间、
-轨迹与地球比例经过压缩，尚非真实遥测或物理仿真；起飞运动、尾焰烟汽
+综合演示的轨迹与地球比例经过压缩；全程地理复盘使用统一米制比例，但
+航迹控制点仍为作者示意，任务时间按公开计划近似对齐，均非实测遥测。
+起飞运动、尾焰烟汽
 和近地尺度的真实感仍有改进空间。海上平台与着陆支架为未验证的概念设计，
 不代表星舰已完成此类回收，也不能与猎鹰九号无人船回收混为一谈。
 完整来源和限制见 [REFERENCES.md](REFERENCES.md)。

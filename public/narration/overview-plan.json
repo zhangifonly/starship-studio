@@ -1,0 +1,188 @@
+{
+  "mission": "flight-5",
+  "clock": "overview-playback-seconds",
+  "duration": 200,
+  "cues": [
+    {
+      "id": "flight5-overview-1",
+      "start": 0,
+      "end": 20,
+      "text": "2024 年 10 月 13 日，B12 与 S30 从 Starbase 起飞。全程航迹为示意插值，不是连续遥测。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-1-f7bbf338654c.mp3",
+          "duration": 9.936,
+          "text": "2024 年 10 月 13 日，B12 与 S30 从 Starbase 起飞。全程航迹为示意插值，不是连续遥测。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-1-fada7f387aa3.mp3",
+          "duration": 10.032,
+          "text": "2024 年 10 月 13 日，B12 与 S30 从 Starbase 起飞。全程航迹为示意插值，不是连续遥测。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-2",
+      "start": 20,
+      "end": 40,
+      "text": "上面级点火并与助推器分离。飞后记录给出的分离高度约为 69 公里；此处没有实测经纬度。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-2-849d03395d62.mp3",
+          "duration": 9.024,
+          "text": "上面级点火并与助推器分离。飞后记录给出的分离高度约为 69 公里；此处没有实测经纬度。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-2-95bcfd12ec28.mp3",
+          "duration": 9.552,
+          "text": "上面级点火并与助推器分离。飞后记录给出的分离高度约为 69 公里；此处没有实测经纬度。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-3",
+      "start": 40,
+      "end": 60,
+      "text": "助推器执行返航点火，上面级继续向东飞行。两级从这里走向不同的任务终点。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-3-18122c2d2ab6.mp3",
+          "duration": 8.04,
+          "text": "助推器执行返航点火，上面级继续向东飞行。两级从这里走向不同的任务终点。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-3-ea35e98991f7.mp3",
+          "duration": 8.376,
+          "text": "助推器执行返航点火，上面级继续向东飞行。两级从这里走向不同的任务终点。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-4",
+      "start": 60,
+      "end": 80,
+      "text": "返航点火后，助推器抛离热分离环。返回构型保留四片栅格翼；它们协助控制下降姿态。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-4-34c91ea7e179.mp3",
+          "duration": 9.744,
+          "text": "返航点火后，助推器抛离热分离环。返回构型保留四片栅格翼；它们协助控制下降姿态。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-4-0c4143b16646.mp3",
+          "duration": 9.408,
+          "text": "返航点火后，助推器抛离热分离环。返回构型保留四片栅格翼；它们协助控制下降姿态。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-5",
+      "start": 80,
+      "end": 100,
+      "text": "助推器重新点火减速，接近发射塔。双臂将承接箭体上部的承力销，发动机不会落在发射台上。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-5-c5840849d1df.mp3",
+          "duration": 9.216,
+          "text": "助推器重新点火减速，接近发射塔。双臂将承接箭体上部的承力销，发动机不会落在发射台上。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-5-feb74e61c1dd.mp3",
+          "duration": 9.744,
+          "text": "助推器重新点火减速，接近发射塔。双臂将承接箭体上部的承力销，发动机不会落在发射台上。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-6",
+      "start": 100,
+      "end": 120,
+      "text": "塔架双臂成功承接 B12。助推器返回发射场，上面级仍在飞行；这不是两级同时回收。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-6-1208981fbc42.mp3",
+          "duration": 9.216,
+          "text": "塔架双臂成功承接 B12。助推器返回发射场，上面级仍在飞行；这不是两级同时回收。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-6-8e91090413f6.mp3",
+          "duration": 9.408,
+          "text": "塔架双臂成功承接 B12。助推器返回发射场，上面级仍在飞行；这不是两级同时回收。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-7",
+      "start": 120,
+      "end": 140,
+      "text": "上面级进入亚轨道滑行，飞后记录给出的远地点约为 212 公里。它没有完成一次绕地球的完整飞行。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-7-cc9288769d7b.mp3",
+          "duration": 10.056,
+          "text": "上面级进入亚轨道滑行，飞后记录给出的远地点约为 212 公里。它没有完成一次绕地球的完整飞行。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-7-3aa5ff1c5587.mp3",
+          "duration": 10.2,
+          "text": "上面级进入亚轨道滑行，飞后记录给出的远地点约为 212 公里。它没有完成一次绕地球的完整飞行。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-8",
+      "start": 140,
+      "end": 160,
+      "text": "上面级在印度洋方向再入大气层。昼夜来自任务时间的太阳方位计算，云层不是当日气象记录。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-8-7d874b4fc4ac.mp3",
+          "duration": 8.784,
+          "text": "上面级在印度洋方向再入大气层。昼夜来自任务时间的太阳方位计算，云层不是当日气象记录。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-8-5fd22ec9f572.mp3",
+          "duration": 9.48,
+          "text": "上面级在印度洋方向再入大气层。昼夜来自任务时间的太阳方位计算，云层不是当日气象记录。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-9",
+      "start": 160,
+      "end": 180,
+      "text": "上面级在海面上方完成末段减速。终点只表示印度洋的大致区域，不是已核实的落点坐标。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-9-3b4dd541956e.mp3",
+          "duration": 9.048,
+          "text": "上面级在海面上方完成末段减速。终点只表示印度洋的大致区域，不是已核实的落点坐标。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-9-e2aa6bd08a01.mp3",
+          "duration": 9.216,
+          "text": "上面级在海面上方完成末段减速。终点只表示印度洋的大致区域，不是已核实的落点坐标。"
+        }
+      }
+    },
+    {
+      "id": "flight5-overview-10",
+      "start": 180,
+      "end": 200,
+      "text": "S30 在印度洋溅落，没有使用海上着陆平台。B12 的塔架捕获与 S30 的溅落，共同构成这次任务的结局。",
+      "audio": {
+        "yunxi": {
+          "src": "/narration/yunxi/flight5-overview-10-082dcc38556d.mp3",
+          "duration": 9.888,
+          "text": "S30 在印度洋溅落，没有使用海上着陆平台。B12 的塔架捕获与 S30 的溅落，共同构成这次任务的结局。"
+        },
+        "xiaoxiao": {
+          "src": "/narration/xiaoxiao/flight5-overview-10-cf2a8854b54a.mp3",
+          "duration": 10.68,
+          "text": "S30 在印度洋溅落，没有使用海上着陆平台。B12 的塔架捕获与 S30 的溅落，共同构成这次任务的结局。"
+        }
+      }
+    }
+  ],
+  "audioStatus": "generated"
+}

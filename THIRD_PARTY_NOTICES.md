@@ -10,6 +10,10 @@ React, Three.js and Vite use MIT licenses. Lucide uses ISC; TypeScript and
 Playwright use Apache-2.0. Dependency versions are locked in `package-lock.json`.
 Consult each installed package's license for its full terms and notices.
 
+SunCalc 1.9.0 uses BSD-2-Clause. The complete copyright and license are
+distributed with the static site at `public/licenses/SUNCALC-LICENSE.txt`.
+It supplies solar calculations, not Starship orbital or telemetry data.
+
 ## Earth Imagery
 
 - `public/textures/earth-day.jpg`: NASA / Visible Earth, Blue Marble composite.

@@ -14,4 +14,5 @@ jobs:
       - run: npm ci
       - run: npm run test:timeline
       - run: npm run test:capture
+      - run: npm run test:geo
       - run: npm run build

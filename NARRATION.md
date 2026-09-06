@@ -86,3 +86,21 @@ npm run test:mission
 
 这里的历史事实是 Flight 5 确实捕获了 B12；35 秒只是重建片段时钟，
 不是真实任务的精确 T+ 时间，旁白也不应给未测量的运动参数背书。
+
+## Flight 5 全程航迹
+
+`src/flight5-timeline.ts` 提供十段讲稿，云希/晓晓共 20 段 MP3，生成实测
+约 8.0-10.7 秒，各占 20 秒播放章节。其余时间留给观察，不循环重读。
+播放时钟是 200 秒，映射到约 65 分钟任务；语音只跟随播放时钟，绝不套用
+轨迹的非均匀时间压缩倍率。默认有声，需用户点击播放，保持原 phyviz 参数。
+
+```sh
+npm run narration:overview
+.venv-tts/bin/python scripts/generate-narration.py --plan public/narration/overview-plan.json --manifest src/overview-audio.json
+npm run test:geo
+npm run test:overview
+```
+
+生成清单为 `src/overview-audio.json`，段级字幕为
+`public/narration/overview-subtitles.srt`。全程、捕获和综合演示的音频可用性
+独立检测；离开其中一个视图会销毁其音频元素，避免后台继续解说。
