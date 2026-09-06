@@ -21,6 +21,8 @@
     "test:overview": "node scripts/verify-overview.mjs",
     "test:return": "node scripts/verify-return.mjs",
     "test:ship30": "node --experimental-strip-types --test scripts/ship30.test.mjs",
+    "test:ascent": "node --experimental-strip-types --test scripts/ascent.test.mjs",
+    "test:ascent-browser": "node scripts/verify-ascent.mjs",
     "test:ship30-browser": "node scripts/verify-ship30.mjs",
     "test:mission": "node scripts/verify-mission.mjs",
     "test:narration": "node scripts/verify-narration.mjs",

@@ -42,6 +42,7 @@ npm run dev
 - 任务时刻分享、独立中英文资料边界说明、五段中文任务解说。
 - 200 秒全程地理复盘、十个事件、两级独立航迹、三种区域机位与发射场小视窗。
 - B12 抛环后的返回近景与固定地面长焦；共享全球坐标、捕获末段及 S30 地球小视窗。
+- B12 + S30 组合体起飞至分离前的伴飞和固定地面长焦；先垂直离塔，全球与近景共用示意加速轨迹。热分离近景尚未重建。
 - S30 第一代伴飞/热盾双视角：关机后滑行、再入、翻转减速与入水定格，不混入 V3 或海上平台。
 - WGS84 地球、基于近似任务 UTC 的太阳方位；明确区分计划时间和飞后记录。
 
@@ -85,6 +86,7 @@ npm run test:timeline
 npm run test:capture
 npm run test:geo
 npm run test:ship30
+npm run test:ascent
 npm run build
 npx playwright install chromium webkit
 # 以下命令需要另一个终端保持开发服务器运行
@@ -98,6 +100,7 @@ npm run test:mission
 npm run test:overview
 npm run test:return
 npm run test:ship30-browser
+npm run test:ascent-browser
 # 无生成音频的干净克隆
 node scripts/verify-mission.mjs --visual-only
 node scripts/verify-overview.mjs --visual-only

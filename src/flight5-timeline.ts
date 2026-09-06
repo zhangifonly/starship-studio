@@ -1,13 +1,16 @@
 import { interpolateGeo, localToGeo, type GeoPoint } from './mission-geo.ts';
 import { captureState } from './mission-data.ts';
+import { ascentSite } from './ascent-layout.ts';
 
 export const FLIGHT5_EPOCH = '2024-10-13T12:25:00Z';
 export const OVERVIEW_DURATION = 200;
 export const STARBASE: GeoPoint = { lat: 25.997, lon: -97.155, altitudeM: 0 };
-export type OverviewCamera = 'global' | 'ship' | 'booster' | 'return' | 'ground' | 'ship-close' | 'ship-heat';
+export type OverviewCamera = 'global' | 'ship' | 'booster' | 'return' | 'ground' | 'ship-close' | 'ship-heat' | 'ascent' | 'ascent-ground';
 export const overviewCameras: { id: OverviewCamera; name: string }[] = [{ id: 'global', name: '地球总览' }, { id: 'ship', name: '上面级区域' }, { id: 'booster', name: '发射场区域' }, { id: 'return', name: 'B12 返回近景' }, { id: 'ground', name: 'B12 地面长焦' }, { id: 'ship-close', name: 'S30 伴飞近景' }, { id: 'ship-heat', name: 'S30 热盾视角' }];
 export const isReturnCamera = (camera: OverviewCamera) => camera === 'return' || camera === 'ground';
 export const isShipCamera = (camera: OverviewCamera) => camera === 'ship-close' || camera === 'ship-heat';
+export const isAscentCamera = (camera: OverviewCamera) => camera === 'ascent' || camera === 'ascent-ground';
+overviewCameras.push({ id: 'ascent', name: '组合体上升近景' }, { id: 'ascent-ground', name: '发射地面长焦' });
 export const captureClipAt = (seconds: number) => Math.max(0, Math.min(35, (seconds - 390) * 23 / 24));
 export const returnCameraAvailable = (seconds: number) => seconds >= 223;
 export const timelineSources = [
@@ -58,6 +61,7 @@ export function flight5State(time: number) {
   return { seconds, date: missionDate(seconds), separated: seconds >= 160, caught: seconds >= 414, splashed: seconds >= 3940, booster: boosterPositionAt(seconds), ship: shipPositionAt(seconds), positionKind: 'authored-interpolation' as const, measuredTelemetry: null };
 }
 export function shipPositionAt(seconds: number): GeoPoint {
+  if (!Number.isFinite(seconds) || seconds < 160) return ascentPositionAt(seconds);
   const point = guidePosition(shipGuide, seconds);
   if (seconds < 3915 || !Number.isFinite(seconds)) return point;
   // A decelerating terminal descent is authored for the same two guide
@@ -66,7 +70,17 @@ export function shipPositionAt(seconds: number): GeoPoint {
   return { ...point, altitudeM: 1500 * (1 - f) ** 2 };
 }
 export function boosterPositionAt(seconds: number): GeoPoint {
+  if (!Number.isFinite(seconds) || seconds < 160) return ascentPositionAt(seconds);
   return seconds >= 390 ? localToGeo(captureState(captureClipAt(seconds)), STARBASE) : guidePosition(boosterGuide, seconds);
+}
+export function ascentPositionAt(seconds: number): GeoPoint {
+  const t = Number.isFinite(seconds) ? Math.max(0, Math.min(160, seconds)) : 0;
+  const start = localToGeo({ x: ascentSite.pad.x, y: ascentSite.launchBaseY, z: ascentSite.pad.z }, STARBASE);
+  // Authored acceleration, not a dynamics solution or inferred telemetry.
+  // No downrange travel until clear of the tower; retain the 160 s endpoint.
+  const horizontal = Math.max(0, (t - 20) / 140) ** 2;
+  const point = interpolateGeo(start, shipGuide[1], horizontal);
+  return { ...point, altitudeM: start.altitudeM + (69000 - start.altitudeM) * (t / 160) ** 2.5 };
 }
 export function parseOverviewHash(hash: string) {
   const q = new URLSearchParams(hash.split('?')[1] || ''), c = q.get('camera');

@@ -16,4 +16,5 @@ jobs:
       - run: npm run test:capture
       - run: npm run test:geo
       - run: npm run test:ship30
+      - run: npm run test:ascent
       - run: npm run build
