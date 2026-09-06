@@ -4,6 +4,8 @@ import { launchState, launchPhases, phaseAt, LAUNCH_DURATION, seaLevel } from '.
 import * as THREE from 'three';
 import { createCatchPins, createLaunchSite } from '../src/launch-site.ts';
 import { launchSite } from '../src/launch-site-layout.ts';
+import { landingSite, shipTouchdown } from '../src/landing-site-layout.ts';
+import { createLandingLegs, createLandingPlatform } from '../src/landing-platform.ts';
 
 test('timeline stays finite and bounded through every stage', () => {
   for (let t = 0; t <= LAUNCH_DURATION; t += .1) {
@@ -27,12 +29,13 @@ test('ship separation is position-continuous and reversible', () => {
   assert.deepEqual(launchState(0), initial);
   assert.equal(initial.captured, false); assert.equal(initial.landed, false);
 });
-test('booster is captured and shut down; ship touches the sea and shuts down', () => {
+test('booster is captured and shut down; ship reaches the concept platform and shuts down', () => {
   const caught = launchState(90), landed = launchState(166);
   assert.equal(caught.captured, true); assert.equal(caught.boosterPower, 0);
   assert.equal(caught.booster.x, 0); assert.equal(caught.booster.angle, 0);
   assert.equal(landed.landed, true); assert.equal(landed.shipPower, 0);
-  assert.ok(Math.abs(landed.ship.y - seaLevel(landed.ship.x)) < .1);
+  assert.ok(Math.abs(landed.ship.x - shipTouchdown.x) < 1e-9);
+  assert.ok(Math.abs(landed.ship.y - shipTouchdown.y) < 1e-9);
   assert.ok(launchState(120).heating > .5);
   assert.equal(landed.heating, 0);
 });
@@ -132,4 +135,39 @@ test('initial supports unload before opening and release before ignition', () =>
   assert.equal(launchState(5).armOpening, 1);
   assert.equal(launchState(5).boosterPower, 0);
   assert.equal(launchState(12).armOpening, 1);
+});
+
+test('all four ship feet contact the actual platform deck after touchdown', () => {
+  const platform = createLandingPlatform(), legs = createLandingLegs();
+  platform.root.position.set(landingSite.x, landingSite.y, 0); platform.root.rotation.z = landingSite.angle;
+  platform.root.updateMatrixWorld(true);
+  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(platform.root.quaternion);
+  for (const time of [154, 155, 166, 0, 154]) {
+    const state = launchState(time), s = state.ship;
+    legs.root.position.set(s.x, s.y, s.z); legs.root.rotation.set(0, s.yaw, s.angle, 'ZYX'); legs.update(state.legsDeployment); legs.root.updateMatrixWorld(true);
+    if (time === 0) { assert.equal(legs.root.visible, false); continue; }
+    assert.equal(state.legsDeployment, 1);
+    assert.ok(Math.abs(s.angle - landingSite.angle) < 1e-9);
+    for (const foot of legs.feet) {
+      const point = foot.localToWorld(new THREE.Vector3(0, -landingSite.footThickness / 2, 0));
+      const local = platform.root.worldToLocal(point.clone());
+      assert.ok(Math.abs(local.y - landingSite.deckY) < 1e-6);
+      assert.ok(Math.hypot(local.x, local.z) < 1.9, 'foot misses landing circle');
+      const ray = new THREE.Raycaster(point.clone().addScaledVector(up, .1), up.clone().negate());
+      const hit = ray.intersectObject(platform.deck)[0];
+      assert.ok(hit && Math.abs(hit.distance - .1) < 1e-6, 'foot is floating or penetrating deck');
+    }
+  }
+});
+test('ship supports remain above the deck during final approach', () => {
+  const legs = createLandingLegs();
+  const frame = new THREE.Object3D(); frame.position.set(landingSite.x, landingSite.y, 0); frame.rotation.z = landingSite.angle; frame.updateMatrixWorld(true);
+  for (let t = 144; t < 154; t += .05) {
+    const state = launchState(t), s = state.ship;
+    legs.update(state.legsDeployment); legs.root.position.set(s.x, s.y, s.z); legs.root.rotation.set(0, s.yaw, s.angle, 'ZYX'); legs.root.updateMatrixWorld(true);
+    for (const foot of legs.feet) {
+      const point = foot.localToWorld(new THREE.Vector3(0, -landingSite.footThickness / 2, 0));
+      assert.ok(frame.worldToLocal(point).y >= landingSite.deckY - 1e-6, `early deck penetration at ${t}`);
+    }
+  }
 });

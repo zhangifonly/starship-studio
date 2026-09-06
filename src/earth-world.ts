@@ -1,5 +1,7 @@
 import * as THREE from 'three';
-import { EARTH_RADIUS, seaLevel } from './launch-timeline';
+import { EARTH_RADIUS } from './world-scale';
+import { landingSite } from './landing-site-layout';
+import { createLandingPlatform } from './landing-platform';
 
 export function createEarthWorld(scene: THREE.Scene, loaded: (ok: boolean) => void) {
   const manager = new THREE.LoadingManager();
@@ -29,7 +31,8 @@ export function createEarthWorld(scene: THREE.Scene, loaded: (ok: boolean) => vo
   });
   globe.add(new THREE.Mesh(new THREE.SphereGeometry(EARTH_RADIUS + 3, 96, 64), atmosphereMaterial));
 
-  const ocean = new THREE.Group(); ocean.position.set(298, seaLevel(298) + .03, 0); ocean.rotation.z = -Math.asin(298 / EARTH_RADIUS); scene.add(ocean);
+  const ocean = new THREE.Group(); ocean.position.set(landingSite.x, landingSite.y, 0); ocean.rotation.z = landingSite.angle; scene.add(ocean);
+  const platform = createLandingPlatform(); ocean.add(platform.root);
   const waterMaterial = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, uniforms: { time: { value: 0 }, opacity: { value: 0 } },
     vertexShader: `uniform float time; varying vec3 vWorld; varying vec3 vLocal;
@@ -45,5 +48,5 @@ export function createEarthWorld(scene: THREE.Scene, loaded: (ok: boolean) => vo
   });
   const waterGeometry = new THREE.PlaneGeometry(200, 200, 180, 180); waterGeometry.rotateX(-Math.PI / 2);
   ocean.add(new THREE.Mesh(waterGeometry, waterMaterial));
-  return { globe, ocean, waterMaterial, atmosphereMaterial, update(time: number) { waterMaterial.uniforms.time.value = time; }, dispose() { disposed = true; day.dispose(); cloudsMap.dispose(); specular.dispose(); } };
+  return { globe, ocean, platform, waterMaterial, atmosphereMaterial, update(time: number) { waterMaterial.uniforms.time.value = time; }, dispose() { disposed = true; day.dispose(); cloudsMap.dispose(); specular.dispose(); platform.texture.dispose(); } };
 }

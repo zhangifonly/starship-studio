@@ -49,10 +49,10 @@ export default function LaunchView({ onFullscreen }: { onFullscreen: () => void 
   return <section className="launch-workspace" aria-label="发射演示">
     <audio ref={speech.audio} preload="auto" data-testid="narration-audio" hidden/>
     <aside className="launch-sidebar" aria-label="发射阶段">
-      <div className="launch-intro"><div className="eyebrow">星舰 / 完整飞行流程</div><h1>从发射到返回</h1><p>助推器捕获 · 星舰海面着陆</p><span className="version-badge"><span/> 十二个飞行阶段</span></div>
+      <div className="launch-intro"><div className="eyebrow">星舰 / 完整飞行流程</div><h1>从发射到返回</h1><p>助推器捕获 · 海上平台概念着陆</p><span className="version-badge"><span/> 十二个飞行阶段</span></div>
       <ol ref={phaseList} className="launch-phases">{launchPhases.map((item, i) => <li key={item.start}><button aria-current={phaseIndex === i ? 'step' : undefined} className={phaseIndex === i ? 'current' : i < phaseIndex ? 'complete' : ''} onClick={() => seek(item.start)} aria-label={`跳转到${item.name}`}><span className="phase-step">{i < phaseIndex ? <Check size={12}/> : String(i + 1).padStart(2, '0')}</span><span className="phase-name">{item.name}<small>{formatLaunchTime(item.start)} · {item.focus}</small></span><ChevronRight size={13}/></button></li>)}</ol>
       <div className="launch-phase-detail" aria-live="polite"><div className="eyebrow">当前阶段 · {String(phaseIndex + 1).padStart(2, '0')}</div><h2>{phase.name}</h2><p>{phase.description}</p><dl><div><dt>观察重点</dt><dd>{phase.focus}</dd></div><div><dt>推进状态</dt><dd>{phase.propulsion}</dd></div></dl></div>
-      <p className="launch-disclaimer">流程重建，非某次真实任务。时间、航程与地球比例经压缩；海面着陆不等于打捞复用。</p>
+      <p className="launch-disclaimer">流程重建，非某次真实任务。时间、航程与地球比例经压缩；星舰平台着陆及支架为未验证的概念设计。</p>
     </aside>
     <div className="launch-main">
       <div className="launch-scene-area">

@@ -7,6 +7,8 @@ import { parts } from './parts';
 import { EARTH_RADIUS, launchState, smooth, type CameraMode } from './launch-timeline';
 import { createEarthWorld } from './earth-world';
 import { createCatchPins, createLaunchSite } from './launch-site';
+import { createLandingLegs } from './landing-platform';
+import { landingSite, landingSitePoint } from './landing-site-layout';
 
 export type LaunchSceneHandle = { reset: () => void; zoom: (factor: number) => void };
 type Props = { time: number; following: boolean; cameraMode: CameraMode; onReady: () => void; onError: () => void; onOrbit: () => void };
@@ -24,6 +26,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     catch { setError(true); latest.current.onError(); return; }
     renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.localClippingEnabled = true;
     renderer.domElement.dataset.testid = 'launch-canvas'; renderer.domElement.setAttribute('aria-label', '星舰发射过程三维动画'); el.appendChild(renderer.domElement);
     const scene = new THREE.Scene(); const sky = new THREE.Color('#8cabb7'); scene.background = sky;
     const camera = new THREE.PerspectiveCamera(37, 1, .1, 12000);
@@ -32,6 +35,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     const pmrem = new THREE.PMREMGenerator(renderer); const room = new RoomEnvironment(); const environment = pmrem.fromScene(room, .04); scene.environment = environment.texture;
     const ambient = new THREE.HemisphereLight('#e0edf1', '#3d4942', 2.3); scene.add(ambient);
     const sun = new THREE.DirectionalLight('#fff0d7', 3.5); sun.position.set(-20, 45, 25); scene.add(sun);
+    scene.add(sun.target);
     sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024); sun.shadow.camera.left = sun.shadow.camera.bottom = -24; sun.shadow.camera.right = sun.shadow.camera.top = 24; sun.shadow.camera.far = 110; sun.shadow.normalBias = .03; sun.shadow.bias = -.0001;
     const rim = new THREE.DirectionalLight('#b9d6ff', 2.1); rim.position.set(20, 12, -12); scene.add(rim);
     const rocket = createRocket(); const ship = new THREE.Group(); const booster = new THREE.Group(); scene.add(ship, booster);
@@ -54,6 +58,11 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       renderer.domElement.dataset.textures = ok ? 'ready' : 'failed';
       if (ok) latest.current.onReady(); else { setError(true); latest.current.onError(); }
     });
+    const landingLegs = createLandingLegs(); ship.add(landingLegs.root);
+    const oceanUp = new THREE.Vector3(0, 1, 0).applyQuaternion(world.ocean.quaternion);
+    const deckPoint = landingSitePoint(0, landingSite.deckY);
+    const deckClip = new THREE.Plane(oceanUp, 1e6);
+    const deckClipConstant = -oceanUp.dot(new THREE.Vector3(deckPoint.x, deckPoint.y, 0));
     mesh(ground, new THREE.BoxGeometry(28, .35, 35), concrete, -5, -.15, -6);
     const terrain = mesh(ground, new THREE.CircleGeometry(38, 64), new THREE.MeshStandardMaterial({ color: '#666f50', roughness: 1 }), -18, -.38, -10); terrain.rotation.x = -Math.PI / 2;
     mesh(ground, new THREE.BoxGeometry(4, .03, 55), dark, -11, .05, -20);
@@ -91,6 +100,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     }
     const boosterPlume = plume(booster, .8, 5.8); boosterPlume.position.y = .18;
     const shipPlume = plume(ship, .46, 4.0); shipPlume.position.y = .05;
+    shipPlume.traverse(o => { if (o instanceof THREE.Mesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.clippingPlanes = [deckClip]; }); });
     const engineGlow = new THREE.PointLight('#ffb979', 0, 12); booster.add(engineGlow); engineGlow.position.y = -.4;
     const ventMaterial = new THREE.MeshBasicMaterial({ color: '#ffd6a5', transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
     const vent = mesh(booster, new THREE.CylinderGeometry(.7, .55, .25, 40, 1, true), ventMaterial, 0, 7.2, 0);
@@ -140,6 +150,8 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       booster.position.set(state.booster.x, state.booster.y, state.booster.z); booster.rotation.set(0, state.booster.yaw, state.booster.angle, 'ZYX');
       ship.position.set(state.ship.x, state.ship.y, state.ship.z); ship.rotation.set(0, state.ship.yaw, state.ship.angle, 'ZYX');
       site.update(state);
+      landingLegs.update(state.legsDeployment);
+      deckClip.constant = t >= 136 ? deckClipConstant : 1e6;
       const flutter = 1 + Math.sin(t * 39) * .025 + Math.sin(t * 63) * .018;
       boosterPlume.visible = state.boosterPower > .01; boosterPlume.scale.setScalar(Math.max(.001, state.boosterPower)); boosterPlume.scale.y *= flutter;
       shipPlume.visible = state.shipPower > .01;
@@ -149,16 +161,16 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       ventMaterial.opacity = state.shipPower * (1 - smooth((t - 42) / 3)) * .8; vent.scale.x = vent.scale.z = 1 + .15 * Math.sin(t * 22);
       plasmaMaterial.opacity = state.heating * (.2 + Math.sin(t * 21) * .015); plasma.visible = plasmaCore.visible = state.heating > .001; plasmaLight.intensity = state.heating * 9;
       plasma.scale.x = 1 + state.heating * .13 * Math.sin(t * 7);
-      world.update(t); world.waterMaterial.uniforms.opacity.value = smooth((t - 125) / 10);
+      world.update(t); world.waterMaterial.uniforms.opacity.value = p.cameraMode === 'landing' ? 1 : smooth((t - 125) / 10);
       spray.visible = wake.visible = state.splash > .001; sprayMaterial.opacity = state.splash * .8; wakeMaterial.uniforms.opacity.value = state.splash * .32;
-      const splashAge = Math.max(0, t - 154);
+      const splashAge = Math.max(0, t - 147);
       dummy.quaternion.copy(world.ocean.quaternion).invert().multiply(camera.quaternion);
       for (let i = 0; i < 90; i++) {
-        const a = i * 2.39996, age = (splashAge * .4 + i / 90) % 1, radius = .6 + age * 4;
-        dummy.position.set(Math.cos(a) * radius, Math.sin(age * Math.PI) * (1.5 + i % 4 * .4), Math.sin(a) * radius);
+        const a = i * 2.39996, age = (splashAge * .4 + i / 90) % 1, radius = 3.7 + age * 2;
+        dummy.position.set(Math.cos(a) * radius, Math.sin(age * Math.PI) * .55, Math.sin(a) * radius * 1.5);
         dummy.scale.setScalar(.5 + Math.sin(age * Math.PI)); dummy.updateMatrix(); spray.setMatrixAt(i, dummy.matrix);
       }
-      spray.instanceMatrix.needsUpdate = true; wake.scale.setScalar(1 + splashAge * .6);
+      spray.instanceMatrix.needsUpdate = true; wake.scale.set(3.4 + splashAge * .12, 5.5 + splashAge * .12, 1);
       smoke.visible = state.smoke > .005; smokeMaterial.opacity = state.smoke * .45;
       dummy.quaternion.copy(camera.quaternion);
       for (let i = 0; i < 70; i++) {
@@ -183,10 +195,16 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
         target.lerp(boosterTarget.clone().lerp(shipTarget, .5), separating).lerp(boosterTarget, returning);
         distance = 26 + separating * (1 - returning) * 12;
       }
+      const landingView = p.cameraMode === 'landing';
+      const deckView = landingView ? 1 : (p.cameraMode === 'cinematic' || p.cameraMode === 'ship') ? smooth((t - 138) / 12) : 0;
+      if (landingView) {
+        const center = landingSitePoint(0, 2.7); target.set(center.x, center.y, 0);
+        distance = 24; altitude = 0; radialX = landingSite.x / EARTH_RADIUS;
+      } else if (deckView) distance = THREE.MathUtils.lerp(distance, 24, deckView);
       distance *= Math.max(1, .9 / camera.aspect) * zoom;
       const radialAngle = Math.asin(radialX);
       camera.up.set(radialX, Math.sqrt(1 - radialX * radialX), 0);
-      offset.set(.48, .17 + smooth((altitude - 15) / 30) * .35, 1).normalize().multiplyScalar(distance).applyAxisAngle(new THREE.Vector3(0, 0, 1), -radialAngle);
+      offset.set(.48, .17 + smooth((altitude - 15) / 30) * .35 + deckView * .5, 1).normalize().multiplyScalar(distance).applyAxisAngle(new THREE.Vector3(0, 0, 1), -radialAngle);
       desiredPosition.copy(target).add(offset);
       if (p.cameraMode === 'ground') {
         camera.up.set(0, 1, 0); desiredPosition.set(19 * zoom, 6, 29 * zoom); altitude = 0;
@@ -207,6 +225,10 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       world.atmosphereMaterial.uniforms.strength.value = globeView ? 1 : smooth((altitude - 25) / 65);
       const groundOpacity = globeView ? 0 : 1 - smooth((altitude - 15) / 45);
       ground.visible = groundOpacity > .001; groundMaterials.forEach(m => { m.opacity = groundOpacity; });
+      if (deckView > 0) {
+        sun.position.set(-20, 45, 25).applyQuaternion(world.ocean.quaternion).add(world.ocean.position);
+        sun.target.position.copy(world.ocean.position);
+      } else { sun.position.set(-20, 45, 25); sun.target.position.set(0, 0, 0); }
       paths.visible = shipMarker.visible = boosterMarker.visible = globeView;
       shipMarker.position.copy(shipTarget); boosterMarker.position.copy(boosterTarget);
       if (p.following || resetRequested) { controls.target.copy(target); camera.position.copy(desiredPosition); controls.update(); }
@@ -214,6 +236,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       renderer.domElement.dataset.separated = String(state.separation > .01);
       renderer.domElement.dataset.captured = String(state.captured); renderer.domElement.dataset.landed = String(state.landed);
       renderer.domElement.dataset.camera = p.cameraMode;
+      renderer.domElement.dataset.legs = state.legsDeployment.toFixed(2);
       resetRequested = false; renderer.render(scene, camera);
     }
     frameId = requestAnimationFrame(frame);
