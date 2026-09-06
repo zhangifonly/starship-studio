@@ -5,8 +5,8 @@
 
 [在线体验](https://spacex.whaty.org/) · [发射演示](https://spacex.whaty.org/#launch) · [MIT 许可证](LICENSE)
 
-升级任务与验收状态见 [UPGRADE_PLAN.md](UPGRADE_PLAN.md)。本地新增入口
-`#mission/flight-5` 为 Flight 5 末段捕获复盘；是否发布以部署记录为准。
+升级任务与验收状态见 [UPGRADE_PLAN.md](UPGRADE_PLAN.md)。
+[Flight 5 捕获复盘](https://spacex.whaty.org/#mission/flight-5) 是独立历史任务入口。
 
 ## 本地运行
 
