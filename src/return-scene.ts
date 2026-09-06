@@ -5,6 +5,7 @@ import { createLaunchSite } from './launch-site';
 import { captureSite, captureState } from './mission-data';
 import { captureClipAt, STARBASE, type flight5State } from './flight5-timeline';
 import { ecefDirectionToEnu, enuBasis, geoToGlobe, geoToLocal, localToGeo, solarElevation, sunDirectionEcef } from './mission-geo';
+import { GRID_FIN_AZIMUTHS } from './grid-fins';
 
 export const groundObserver = new THREE.Vector3(30, 1.8, 100);
 type State = ReturnType<typeof flight5State>;
@@ -47,7 +48,7 @@ export function createReturnScene(renderer: THREE.WebGLRenderer) {
     const a = i * Math.PI * 2 / 3; flame.position.set(Math.sin(a) * .086, -2.05, Math.cos(a) * .086); plume.add(flame);
   }
   const target = new THREE.Vector3();
-  function update(state: State, mode: 'return' | 'ground', aspect: number, zoom: number) {
+  function update(state: State, mode: 'return' | 'ground' | 'fins', aspect: number, zoom: number) {
     const pose = captureState(captureClipAt(state.seconds)), local = geoToLocal(state.booster, STARBASE);
     booster.root.position.set(local.x, local.y, local.z);
     const up = ecefDirectionToEnu(enuBasis(state.booster).up, STARBASE);
@@ -56,11 +57,13 @@ export function createReturnScene(renderer: THREE.WebGLRenderer) {
     booster.root.quaternion.identity();
     if (state.seconds < 390) booster.root.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(up.x, up.z, -up.y).normalize());
     booster.root.rotateZ(state.seconds >= 390 ? pose.angle : -.055);
+    const finAngles = booster.updateGridFins(state.seconds);
     site.update(pose);
     plume.visible = state.seconds >= 390 && pose.power > 0;
     plume.scale.y = 1 + .035 * Math.sin(pose.time * 43);
     flameMaterial.uniforms.time.value = pose.time; flameMaterial.uniforms.power.value = pose.power * 2;
     target.copy(booster.root.position).add(new THREE.Vector3(0, 3.5, 0));
+    if (mode === 'fins') target.set(0, 6.7, 0).applyQuaternion(booster.root.quaternion).add(booster.root.position);
     const sunlight = ecefDirectionToEnu(sunDirectionEcef(state.date), STARBASE);
     light.target.position.copy(target); light.position.copy(target).add(new THREE.Vector3(sunlight.x, sunlight.z, -sunlight.y).multiplyScalar(100));
     camera.aspect = aspect; camera.up.set(0, 1, 0);
@@ -70,9 +73,10 @@ export function createReturnScene(renderer: THREE.WebGLRenderer) {
       camera.fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(6.2 * Math.max(1, .8 / aspect) * zoom / distance)), .04, 42);
     } else {
       camera.fov = 34;
-      camera.position.copy(target).add(new THREE.Vector3(10, 3, 22).multiplyScalar(zoom * Math.max(1, .8 / aspect)));
+      const offset = mode === 'fins' ? new THREE.Vector3(3, 2.8, 4).applyQuaternion(booster.root.quaternion) : new THREE.Vector3(10, 3, 22);
+      camera.position.copy(target).add(offset.multiplyScalar(zoom * Math.max(1, .8 / aspect)));
     }
-    camera.lookAt(target); camera.updateProjectionMatrix();
+    camera.lookAt(target); camera.updateProjectionMatrix(); camera.updateMatrixWorld(true);
     // Reproject the very same local camera into the global Earth pass.
     const observer = localToGeo(camera.position, STARBASE), globalPosition = geoToGlobe(observer);
     const globalTarget = geoToGlobe(localToGeo(target, STARBASE));
@@ -88,7 +92,11 @@ export function createReturnScene(renderer: THREE.WebGLRenderer) {
     earthFog.color.copy(sky); earthFog.near = .00065; earthFog.far = .0026 + Math.pow(Math.max(0, observer.altitudeM) / 12000, 2);
     terrain.visible = state.booster.altitudeM < 5000;
     site.root.visible = state.booster.altitudeM < 10000;
-    return { local, contact: state.seconds >= 390 && pose.contact, plume: plume.visible, fov: camera.fov, cameraPosition: camera.position.toArray(), sky, earthFog };
+    const finCenters = GRID_FIN_AZIMUTHS.map(a => {
+      const p = new THREE.Vector3(Math.sin(a) * .785, 6.75, Math.cos(a) * .785).applyQuaternion(booster.root.quaternion).add(booster.root.position).project(camera);
+      return [(p.x + 1) / 2, (1 - p.y) / 2];
+    });
+    return { local, finAngles, finCenters, contact: state.seconds >= 390 && pose.contact, plume: plume.visible, fov: camera.fov, cameraPosition: camera.position.toArray(), sky, earthFog };
   }
   return { scene, camera, earthCamera, update, dispose() {
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();

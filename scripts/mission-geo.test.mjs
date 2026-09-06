@@ -47,7 +47,7 @@ test('all coordinate guides are authored, never measured samples', () => {
   const state = flight5State(150); assert.equal(state.positionKind, 'authored-interpolation'); assert.equal(state.measuredTelemetry, null);
   const a = { lat: 0, lon: 179, altitudeM: 0 }, b = { lat: 0, lon: -179, altitudeM: 10 }; const middle = interpolateGeo(a, b, .5); near(Math.abs(middle.lon), 180); near(middle.altitudeM, 5);
 });
-test('both stages share their pre-separation position and return stays at Starbase', () => {
+test('legacy guide anchors agree before separation and return stays at Starbase', () => {
   for (let t = 0; t <= 160; t += 2) assert.deepEqual(guidePosition(shipGuide, t), guidePosition(boosterGuide, t));
   assert.equal(flight5State(19.9).separated, false); assert.equal(flight5State(20).separated, true);
   const state = flight5State(100); assert.equal(state.caught, true); assert.ok(Math.abs(state.booster.lat - STARBASE.lat) < .001); assert.ok(Math.abs(state.booster.lon - STARBASE.lon) < .001); assert.ok(state.booster.altitudeM > 60);

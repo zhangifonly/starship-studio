@@ -35,7 +35,9 @@ for (const engine of process.argv.includes('--webkit') ? [webkit] : [chromium]) 
       await expect(canvas).toHaveAttribute('data-dual', 'false');
       await page.getByRole('button', { name: '双机位', exact: true }).click();
       await page.getByRole('button', { name: '突出承力点' }).click();
-      const rect = await canvas.boundingBox();
+      // Clicking off-screen transport controls scrolls the document, not the canvas layout.
+      const frame = () => canvas.evaluate(el => { const r = el.getBoundingClientRect(); return { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height, drawingWidth: el.width, drawingHeight: el.height }; });
+      const rect = await frame();
       const layout = await page.evaluate(() => ({ width: document.documentElement.scrollWidth, viewport: innerWidth, footer: document.querySelector('.status-bar').getBoundingClientRect().top, controls: document.querySelector('.mission-transport').getBoundingClientRect().bottom }));
       expect(layout.width).toBeLessThanOrEqual(layout.viewport);
       expect(layout.controls).toBeLessThanOrEqual(layout.footer + 1);
@@ -51,7 +53,7 @@ for (const engine of process.argv.includes('--webkit') ? [webkit] : [chromium]) 
             await page.getByRole('button', { name: '播放任务复盘', exact: true }).click();
             await expect.poll(() => audio.evaluate(el => !el.paused && el.currentTime > .1)).toBe(true);
             await expect.poll(async () => Number(await canvas.getAttribute('data-time'))).toBeGreaterThan(t + .2);
-            expect(await canvas.boundingBox()).toEqual(rect);
+            expect(await frame()).toEqual(rect);
             await page.getByRole('button', { name: '暂停任务复盘', exact: true }).click();
           }
         }
@@ -61,7 +63,7 @@ for (const engine of process.argv.includes('--webkit') ? [webkit] : [chromium]) 
         await page.getByRole('button', { name: '播放任务复盘', exact: true }).click();
         await expect.poll(async () => Number(await canvas.getAttribute('data-time'))).toBeGreaterThan(8.4);
         await expect(audio).toHaveAttribute('src', /flight5-capture-2-/);
-        expect(await canvas.boundingBox()).toEqual(rect);
+        expect(await frame()).toEqual(rect);
         await expect(canvas).toHaveAttribute('data-identity', identity);
         await page.getByRole('button', { name: '暂停任务复盘', exact: true }).click();
         if (width === 1440) {

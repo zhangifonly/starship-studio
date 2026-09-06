@@ -7,7 +7,8 @@ export const ascentSite = {
   launchBaseY: captureSite.launchBaseY + captureSite.skirtSupportY - .15,
   skirtSupportY: .15,
 };
-export const ASCENT_SHIP_Y = 7.25;
+export const ASCENT_SHIP_Y = 7.01;
 export const ASCENT_RING_BOTTOM = 6.96;
-export const ASCENT_RING_TOP = 7.38;
-export const ascentCameraAvailable = (seconds: number) => Number.isFinite(seconds) && seconds >= 0 && seconds < 160;
+export const ASCENT_RING_TOP = 7.14;
+export const ascentCameraAvailable = (seconds: number) => Number.isFinite(seconds) && seconds >= 0 && seconds < 165;
+export const stagingCameraAvailable = (seconds: number) => Number.isFinite(seconds) && seconds >= 153 && seconds < 165;

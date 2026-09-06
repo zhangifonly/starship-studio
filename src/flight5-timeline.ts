@@ -1,19 +1,23 @@
-import { interpolateGeo, localToGeo, type GeoPoint } from './mission-geo.ts';
+import * as THREE from 'three';
+import { geoToLocal, interpolateGeo, localToGeo, type GeoPoint } from './mission-geo.ts';
 import { captureState } from './mission-data.ts';
-import { ascentSite } from './ascent-layout.ts';
+import { ascentSite, ASCENT_SHIP_Y } from './ascent-layout.ts';
 
 export const FLIGHT5_EPOCH = '2024-10-13T12:25:00Z';
 export const OVERVIEW_DURATION = 200;
 export const STARBASE: GeoPoint = { lat: 25.997, lon: -97.155, altitudeM: 0 };
-export type OverviewCamera = 'global' | 'ship' | 'booster' | 'return' | 'ground' | 'ship-close' | 'ship-heat' | 'ascent' | 'ascent-ground';
+export type OverviewCamera = 'global' | 'ship' | 'booster' | 'return' | 'ground' | 'fins' | 'ship-close' | 'ship-heat' | 'ascent' | 'ascent-ground' | 'staging';
 export const overviewCameras: { id: OverviewCamera; name: string }[] = [{ id: 'global', name: '地球总览' }, { id: 'ship', name: '上面级区域' }, { id: 'booster', name: '发射场区域' }, { id: 'return', name: 'B12 返回近景' }, { id: 'ground', name: 'B12 地面长焦' }, { id: 'ship-close', name: 'S30 伴飞近景' }, { id: 'ship-heat', name: 'S30 热盾视角' }];
-export const isReturnCamera = (camera: OverviewCamera) => camera === 'return' || camera === 'ground';
+export const isReturnCamera = (camera: OverviewCamera) => camera === 'return' || camera === 'ground' || camera === 'fins';
+overviewCameras.splice(5, 0, { id: 'fins', name: 'B12 栅格翼特写' });
 export const isShipCamera = (camera: OverviewCamera) => camera === 'ship-close' || camera === 'ship-heat';
-export const isAscentCamera = (camera: OverviewCamera) => camera === 'ascent' || camera === 'ascent-ground';
-overviewCameras.push({ id: 'ascent', name: '组合体上升近景' }, { id: 'ascent-ground', name: '发射地面长焦' });
+export const isAscentCamera = (camera: OverviewCamera) => camera === 'ascent' || camera === 'ascent-ground' || camera === 'staging';
+overviewCameras.push({ id: 'ascent', name: '上升与热分离' }, { id: 'ascent-ground', name: '发射地面长焦' }, { id: 'staging', name: '分离环观察' });
 export const captureClipAt = (seconds: number) => Math.max(0, Math.min(35, (seconds - 390) * 23 / 24));
 export const returnCameraAvailable = (seconds: number) => seconds >= 223;
 export const timelineSources = [
+  { id: 'grid-fins', name: 'Everyday Astronaut · Starbase 访谈', date: '2021 年访谈；核对于 2026-09-06', url: 'https://everydayastronaut.com/starbase-tour-and-interview-with-elon-musk/', scope: 'Super Heavy 栅格翼不折叠的设计理由与转动控制。早期设计访谈，不用于推定 B12 精确周向布置或逐翼偏转角度。' },
+  { id: 'hot-stage', name: 'Super Heavy 热分离构型记录', date: '核对于 2026-09-06', url: 'https://en.wikipedia.org/wiki/SpaceX_Super_Heavy#Interstage', scope: '二级资料：早期约 1.8 m 通风级间段、助推器保留中心三机、上面级分离前点火、顶部防护与返航后抛环。不是逐台发动机遥测或排气流场数据。' },
   { id: 'jsr838', name: 'Jonathan’s Space Report 838', date: '2024-10-25', url: 'https://planet4589.org/space/jsr/back/news.838.txt', scope: '飞后记录：约 69 km 分离、助推器捕获、约 212 km 远地点与约 65 分钟后溅落。正文与表格的远地点有 1 km 差异。' },
   { id: 'schedule', name: 'Flight 5 公开事件表', date: '核对于 2026-09-06', url: 'https://en.wikipedia.org/wiki/Starship_flight_test_5#Flight_timeline', scope: '二级资料中的 SpaceX 计划时间表，不视为实飞秒级遥测。动画据此安排事件；捕获精确秒数存在资料差异。' },
   { id: 'catch-report', name: 'Spaceflight Now 捕获回顾', date: '2024-11-01', url: 'https://spaceflightnow.com/2024/11/01/starship-booster-catch-brings-nasa-spacex-closer-to-artemis-3-moon-landing/', scope: '首次捕获的飞后确认；助推器约七分钟返回发射场。' },
@@ -61,7 +65,11 @@ export function flight5State(time: number) {
   return { seconds, date: missionDate(seconds), separated: seconds >= 160, caught: seconds >= 414, splashed: seconds >= 3940, booster: boosterPositionAt(seconds), ship: shipPositionAt(seconds), positionKind: 'authored-interpolation' as const, measuredTelemetry: null };
 }
 export function shipPositionAt(seconds: number): GeoPoint {
-  if (!Number.isFinite(seconds) || seconds < 160) return ascentPositionAt(seconds);
+  if (!Number.isFinite(seconds) || seconds < 160) {
+    const base = localVector(ascentPositionAt(seconds));
+    return localToGeo(base.add(new THREE.Vector3(0, ASCENT_SHIP_Y, 0).applyQuaternion(ascentQuaternionAt(seconds))), STARBASE);
+  }
+  if (seconds < 223) return stagingPositionAt(seconds, 'ship');
   const point = guidePosition(shipGuide, seconds);
   if (seconds < 3915 || !Number.isFinite(seconds)) return point;
   // A decelerating terminal descent is authored for the same two guide
@@ -71,6 +79,7 @@ export function shipPositionAt(seconds: number): GeoPoint {
 }
 export function boosterPositionAt(seconds: number): GeoPoint {
   if (!Number.isFinite(seconds) || seconds < 160) return ascentPositionAt(seconds);
+  if (seconds < 223) return stagingPositionAt(seconds, 'booster');
   return seconds >= 390 ? localToGeo(captureState(captureClipAt(seconds)), STARBASE) : guidePosition(boosterGuide, seconds);
 }
 export function ascentPositionAt(seconds: number): GeoPoint {
@@ -81,6 +90,29 @@ export function ascentPositionAt(seconds: number): GeoPoint {
   const horizontal = Math.max(0, (t - 20) / 140) ** 2;
   const point = interpolateGeo(start, shipGuide[1], horizontal);
   return { ...point, altitudeM: start.altitudeM + (69000 - start.altitudeM) * (t / 160) ** 2.5 };
+}
+const localVector = (point: GeoPoint) => { const p = geoToLocal(point, STARBASE); return new THREE.Vector3(p.x, p.y, p.z); };
+export function ascentQuaternionAt(seconds: number) {
+  const t = Number.isFinite(seconds) ? Math.max(0, Math.min(160, seconds)) : 0;
+  const before = localVector(ascentPositionAt(Math.max(0, t - .1)));
+  const after = localVector(ascentPositionAt(Math.min(160, t + .1)));
+  return new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), after.sub(before).normalize()), THREE.MathUtils.smoothstep(t, 20, 23));
+}
+export const stagingGapAt = (seconds: number) => .15 * Math.max(0, Math.min(5, seconds - 160)) ** 2;
+function stagingPositionAt(seconds: number, vehicle: 'ship' | 'booster'): GeoPoint {
+  const t = Math.max(160, Math.min(223, seconds)), dt = t - 160;
+  const start = localVector(ascentPositionAt(160)), velocity = start.clone().sub(localVector(ascentPositionAt(159.999))).multiplyScalar(1000);
+  const axis = new THREE.Vector3(0, 1, 0).applyQuaternion(ascentQuaternionAt(160));
+  const initial = (elapsed: number) => start.clone().addScaledVector(velocity, elapsed).addScaledVector(axis, vehicle === 'ship' ? ASCENT_SHIP_Y + .15 * elapsed ** 2 : 0);
+  if (t <= 165) return localToGeo(initial(dt), STARBASE);
+  // A Hermite-equivalent Bezier bridge joins the short separation reconstruction
+  // to the existing authored geography. It is not an acceleration solution.
+  const guide = vehicle === 'ship' ? shipGuide : boosterGuide;
+  const a = initial(5), b = localVector(guidePosition(guide, 223));
+  const va = velocity.clone().addScaledVector(axis, vehicle === 'ship' ? 1.5 : 0);
+  const vb = localVector(guidePosition(guide, 223.01)).sub(b).multiplyScalar(100);
+  const curve = new THREE.CubicBezierCurve3(a, a.clone().addScaledVector(va, 58 / 3), b.clone().addScaledVector(vb, -58 / 3), b);
+  return localToGeo(curve.getPoint((t - 165) / 58), STARBASE);
 }
 export function parseOverviewHash(hash: string) {
   const q = new URLSearchParams(hash.split('?')[1] || ''), c = q.get('camera');

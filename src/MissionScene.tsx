@@ -76,6 +76,7 @@ export default forwardRef<MissionSceneHandle, Props>(function MissionScene(props
       if (key === drawn && !dirty) return;
       if (p.camera !== previousCamera) { follow = true; zoom = 1; previousCamera = p.camera; }
       const state = captureState(p.time); booster.root.position.set(state.x, state.y, state.z); booster.root.rotation.z = state.angle;
+      const finAngles = booster.updateGridFins(390 + state.time * 24 / 23);
       booster.pinHighlights.visible = p.highlights; site.update(state);
       plume.visible = state.power > 0; plume.scale.y = 1 + .035 * Math.sin(state.time * 43); plumeMaterial.uniforms.time.value = state.time; plumeMaterial.uniforms.power.value = state.power * 2;
       const portrait = w < 620;
@@ -102,6 +103,7 @@ export default forwardRef<MissionSceneHandle, Props>(function MissionScene(props
       }
       renderer.setScissorTest(false);
       Object.assign(renderer.domElement.dataset, { ready: 'true', time: state.time.toFixed(2), contact: String(state.contact), captured: String(state.captured), camera: p.camera, dual: String(p.dual), gridfins: String((booster.fins.children[0] as THREE.InstancedMesh).count / 20), hotstage: 'absent', engines: String(booster.engines.count) });
+      renderer.domElement.dataset.finAngles = JSON.stringify(finAngles);
       drawn = key; dirty = false;
     }
     raf = requestAnimationFrame(render); current.current.onReady();

@@ -127,9 +127,9 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
       let shipData: ReturnType<ReturnType<typeof createShip30Scene>['update']> | undefined;
       let ascentData: ReturnType<ReturnType<typeof createAscentScene>['update']> | undefined;
       if (closeView) {
-        if (ascentView) { ascentScene ??= createAscentScene(renderer); ascentData = ascentScene.update(state, p.camera === 'ascent-ground' ? 'ascent-ground' : 'ascent', w / h, zoom); }
+        if (ascentView) { ascentScene ??= createAscentScene(renderer); ascentData = ascentScene.update(state, p.camera === 'staging' ? 'staging' : p.camera === 'ascent-ground' ? 'ascent-ground' : 'ascent', w / h, zoom); }
         else if (shipView) { shipScene ??= createShip30Scene(renderer); shipData = shipScene.update(state, p.camera === 'ship-heat' ? 'ship-heat' : 'ship-close', w / h, zoom); }
-        else { nearScene ??= createReturnScene(renderer); nearData = nearScene.update(state, p.camera === 'ground' ? 'ground' : 'return', w / h, zoom); }
+        else { nearScene ??= createReturnScene(renderer); nearData = nearScene.update(state, p.camera === 'ground' ? 'ground' : p.camera === 'fins' ? 'fins' : 'return', w / h, zoom); }
         const activeScene = ascentView ? ascentScene! : shipView ? shipScene! : nearScene!, activeData = ascentData ?? shipData ?? nearData!;
         const hidden: THREE.Object3D[] = [ship, booster, launch, shipPath.past, shipPath.future, boosterPath.past, boosterPath.future];
         if (!shipView || state.ship.altitudeM < 16000) hidden.push(clouds);
@@ -156,8 +156,11 @@ export default forwardRef<FlightGlobeHandle, Props>(function FlightGlobe(props, 
       markerSizes(inset); renderer.setScissorTest(true); renderer.setScissor(w - iw - 12, h - insetTop - ih, iw, ih); renderer.setViewport(w - iw - 12, h - insetTop - ih, iw, ih); renderer.clear(); renderer.render(scene, inset); renderer.setScissorTest(false);
       Object.assign(renderer.domElement.dataset, { ready: String(ready), time: p.time.toFixed(2), missionTime: state.seconds.toFixed(2), camera: p.camera, separated: String(state.separated), caught: String(state.caught), splashed: String(state.splashed), positionKind: state.positionKind, sun: sun.position.toArray().map(v => v.toFixed(5)).join(','), ship: ship.position.toArray().join(','), booster: booster.position.toArray().join(','), cameraDistance: camera.position.distanceTo(controls.target).toFixed(4) });
       Object.assign(renderer.domElement.dataset, { near: String(closeView), localBooster: nearData ? JSON.stringify(nearData.local) : '', nearContact: String(nearData?.contact ?? false), nearPlume: String(nearData?.plume ?? false), nearFov: nearData?.fov.toFixed(5) ?? '', nearCamera: nearData?.cameraPosition.join(',') ?? '' });
+      renderer.domElement.dataset.finAngles = nearData || ascentData ? JSON.stringify((nearData ?? ascentData)!.finAngles) : '';
+      renderer.domElement.dataset.finCenters = nearData ? JSON.stringify(nearData.finCenters) : '';
       Object.assign(renderer.domElement.dataset, { shipNear: String(shipView), shipPitch: shipData?.pose.pitch.toFixed(6) ?? '', shipHeat: shipData?.pose.heat.toFixed(6) ?? '', shipPower: shipData?.pose.power.toFixed(6) ?? '', shipSplash: String(shipData?.pose.splash ?? false), shipLocal: shipData?.local.join(',') ?? '', shipQuaternion: shipData?.quaternion.join(',') ?? '', shipCourse: shipData?.course.join(',') ?? '', shipTiles: String(shipData?.tileCount ?? 0), shipEngines: String(shipData?.engineCount ?? 0), shipCameraPosition: shipData?.cameraPosition.join(',') ?? '' });
       Object.assign(renderer.domElement.dataset, { ascentNear: String(ascentView), ascentLocal: ascentData ? JSON.stringify(ascentData.local) : '', ascentQuaternion: ascentData?.quaternion.join(',') ?? '', ascentCamera: ascentData?.cameraPosition.join(',') ?? '', ascentFov: String(ascentData?.fov ?? ''), ascentEngines: String(ascentData?.engines ?? 0), ascentRing: String(ascentData?.ring ?? false), ascentNose: ascentData?.nose.join(',') ?? '' });
+      Object.assign(renderer.domElement.dataset, { stagingDetail: String(ascentData?.detail ?? false), stagingGap: String(ascentData?.gap ?? 0), stagingShipPower: String(ascentData?.shipPower ?? 0), stagingVentPower: String(ascentData?.ventPower ?? 0), stagingShipLocal: ascentData ? JSON.stringify(ascentData.shipLocal) : '', stagingCollar: ascentData?.collar.join(',') ?? '' });
       dirty = false; drawn = key;
     }
     raf = requestAnimationFrame(render);

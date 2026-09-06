@@ -25,7 +25,7 @@ function Evidence({ onPhoto }: { onPhoto: () => void }) {
         <p className="mission-license">参考照片经缩小处理，未裁剪、未调色。<a href="https://creativecommons.org/licenses/by/2.0/" target="_blank" rel="noreferrer">查看 CC BY 2.0 许可</a></p>
       </> : <>
         <div className="mission-panel-eyebrow">事实不等于模型参数</div><h2>哪些是重建？</h2>
-        <dl className="mission-limits"><div><dt>已记录的任务事实</dt><dd>任务日期、B12 / S30、助推器首次塔架捕获，以及上面级的溅落结局。</dd></div><div><dt>照片引导的外观</dt><dd>返回箭体、四片栅格翼和早期塔架。焊缝、承力销与发动机细节为简化外观，非制造 CAD。</dd></div><div><dt>未测量的空间参数</dt><dd>捕获高度、塔台间距、臂长和机位是近似重建。参考照片有透视，不能据其直接测绘。</dd></div><div><dt>独立片段时钟</dt><dd>00:00 至 00:35 是重建动画时间，不是实际发射后的 T+ 时间。轨迹、收臂速度与关机间隔不是遥测。</dd></div><div><dt>此处不展示</dt><dd>上面级平台着陆、V3 硬件、后续转运，以及未经验证的“实时”高度或速度仪表。</dd></div></dl>
+        <dl className="mission-limits"><div><dt>已记录的任务事实</dt><dd>任务日期、B12 / S30、助推器首次塔架捕获，以及上面级的溅落结局。</dd></div><div><dt>照片引导的外观</dt><dd>返回箭体、四片栅格翼和早期塔架。焊缝、承力销与发动机细节为简化外观，非制造 CAD。栅格翼保持展开；各翼独立偏转和捕获前回到中立角为教学示意，不是实飞角度记录。</dd></div><div><dt>未测量的空间参数</dt><dd>捕获高度、塔台间距、臂长和机位是近似重建。参考照片有透视，不能据其直接测绘。</dd></div><div><dt>独立片段时钟</dt><dd>00:00 至 00:35 是重建动画时间，不是实际发射后的 T+ 时间。轨迹、收臂速度与关机间隔不是遥测。</dd></div><div><dt>此处不展示</dt><dd>上面级平台着陆、V3 硬件、后续转运，以及未经验证的“实时”高度或速度仪表。</dd></div></dl>
       </>}
     </div>
   </>;

@@ -36,6 +36,10 @@ try {
         await expect(canvas).toHaveAttribute('data-near', 'true');
         await expect(canvas).toHaveAttribute('data-near-contact', String(t >= 100));
         await expect(canvas).toHaveAttribute('data-near-plume', String(t >= 80 && t < 101));
+        const fins = JSON.parse(await canvas.getAttribute('data-fin-angles'));
+        expect(fins).toHaveLength(4);
+        if (t === 60 || Number(await canvas.getAttribute('data-mission-time')) >= 412) expect(fins).toEqual([0, 0, 0, 0]);
+        else expect(fins.some(angle => Math.abs(angle) > .00001)).toBe(true);
         if (camera === 'ground') {
           await expect(canvas).toHaveAttribute('data-near-camera', '30,1.8,100');
           const fov = Number(await canvas.getAttribute('data-near-fov'));
