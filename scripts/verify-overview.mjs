@@ -14,7 +14,8 @@ try {
     const page = await browser.newPage({ viewport: { width, height }, isMobile: width < 700, hasTouch: width < 900 });
     const errors = []; page.on('pageerror', e => errors.push(e.message));
     page.on('console', m => { if (m.type() === 'error' && /THREE|WebGL|shader/i.test(m.text())) errors.push(m.text()); });
-    const failedRequests = []; page.on('requestfailed', r => failedRequests.push(r.url()));
+    page.on('response', r => { if (r.status() >= 400) errors.push(`${r.status()} ${r.url()}`); });
+    const failedRequests = []; page.on('requestfailed', r => failedRequests.push({ url: r.url(), reason: r.failure()?.errorText }));
     await page.goto(`${base}/#mission/flight-5/overview`, { waitUntil: 'networkidle' });
     const canvas = page.getByTestId('flight-globe'), slider = page.getByRole('slider', { name: '全程复盘进度' });
     await expect(canvas).toHaveAttribute('data-ready', 'true');
@@ -100,7 +101,10 @@ try {
       await expect(canvas).toHaveAttribute('data-time', '88.80'); await expect(canvas).toHaveAttribute('data-camera', 'ship');
       await page.getByRole('button', { name: '跳转首次塔架捕获' }).click(); await expect(canvas).toHaveAttribute('data-caught', 'true');
     }
-    expect(errors).toEqual([]); expect(failedRequests).toEqual([]);
-    console.log(JSON.stringify({ engine: engine.name(), width, height, canvas: rect, errors })); await page.close();
+    // Changing the cue intentionally cancels its previous media download.
+    // Retain HTTP errors and all other transport failures; real clips are decoded above.
+    const cancelledAudio = r => /\/narration\/.*\.mp3$/.test(r.url) && (r.reason === 'net::ERR_ABORTED' || r.reason === 'cancelled');
+    expect(errors).toEqual([]); expect(failedRequests.filter(r => !cancelledAudio(r))).toEqual([]);
+    console.log(JSON.stringify({ engine: engine.name(), width, height, canvas: rect, errors, cancelledAudioRequests: failedRequests.filter(cancelledAudio).length })); await page.close();
   }
 } finally { await browser.close(); }
