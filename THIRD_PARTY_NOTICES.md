@@ -14,6 +14,10 @@ SunCalc 1.9.0 uses BSD-2-Clause. The complete copyright and license are
 distributed with the static site at `public/licenses/SUNCALC-LICENSE.txt`.
 It supplies solar calculations, not Starship orbital or telemetry data.
 
+satellite.js 6.0.1 uses MIT. Its complete notice is distributed at
+`public/licenses/SATELLITE-JS-LICENSE.txt`. The deployment concept uses its
+SGP4 propagator with synthetic elements, not measured Starship orbital data.
+
 ## Earth Imagery
 
 - `public/textures/earth-day.jpg`: NASA / Visible Earth, Blue Marble composite.

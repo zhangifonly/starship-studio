@@ -104,3 +104,21 @@ npm run test:overview
 生成清单为 `src/overview-audio.json`，段级字幕为
 `public/narration/overview-subtitles.srt`。全程、捕获和综合演示的音频可用性
 独立检测；离开其中一个视图会销毁其音频元素，避免后台继续解说。
+
+## 轨道卫星部署概念
+
+`src/deployment-state.ts` 提供 120 秒六段讲稿，云希/晓晓共 12 段 MP3，
+单段约 10.1-12.4 秒。沿用 phyviz 音色及原速参数，不更换播放同步逻辑。
+内容明确区分虚构在轨部署与 Flight 10 的亚轨道质量模拟器释放。
+
+```sh
+npm run narration:deployment
+.venv-tts/bin/python scripts/generate-narration.py --plan public/narration/deployment-plan.json --manifest src/deployment-audio.json
+npm run test:deployment
+npm run test:deployment-browser
+```
+
+讲稿、段级 SRT 和清单独立保存为 `deployment-plan.json`、
+`deployment-subtitles.srt` 和 `src/deployment-audio.json`。生成的 MP3 不入 Git。
+音频齐全时默认有声，点击播放才开始；缺少时只禁用本任务的语音。
+固定字幕和缓冲状态高度，换段及切换音色不重建或缩放三维画布。

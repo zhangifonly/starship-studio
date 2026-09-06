@@ -10,6 +10,8 @@
 [Flight 5 全程航迹](https://spacex.whaty.org/#mission/flight-5/overview) 提供起飞到
 印度洋溅落的事件导航、地球视角与独立解说。数据契约与证据限度见
 [FLIGHT5_GEOGRAPHY.md](FLIGHT5_GEOGRAPHY.md)。
+[卫星部署概念](https://spacex.whaty.org/#mission/deployment) 展示开舱、依次释放、
+安全分离与太阳翼展开；与历史任务独立，边界见 [DEPLOYMENT_CONCEPT.md](DEPLOYMENT_CONCEPT.md)。
 
 ## 本地运行
 
@@ -37,6 +39,7 @@ npm run dev
 - 海上平台船体、甲板标线、护栏、设备舱与概念着陆支架。
 - NASA 地球底图、云层、大气、海面及程序化推进效果。
 - 桌面与移动端界面。
+- 120 秒轨道卫星部署概念、三个机位、三颗目标卫星与六段中文解说；虚构轨道由 SGP4 传播。
 - Flight 5 / B12 独立历史任务资料，四栅格翼、无热分离环的返回外观。
 - 四片栅格翼保持展开，返回时独立偏转；与捕获片段共用时钟，角度为教学示意而非遥测。
 - 35 秒捕获重建片段、同场景双机位、承力点高亮、来源与照片对照。
@@ -75,6 +78,10 @@ npm run narration:capture
 # 独立的 Flight 5 全程航迹
 npm run narration:overview
 .venv-tts/bin/python scripts/generate-narration.py --plan public/narration/overview-plan.json --manifest src/overview-audio.json
+
+# 独立的轨道卫星部署概念
+npm run narration:deployment
+.venv-tts/bin/python scripts/generate-narration.py --plan public/narration/deployment-plan.json --manifest src/deployment-audio.json
 ```
 
 生成后重启开发服务器或重新构建，自动启用默认有声解说。
@@ -86,6 +93,7 @@ npm run narration:overview
 npm run test:timeline
 npm run test:capture
 npm run test:grid-fins
+npm run test:deployment
 npm run test:geo
 npm run test:ship30
 npm run test:ascent
@@ -103,6 +111,7 @@ npm run test:mission
 npm run test:overview
 npm run test:return
 npm run test:grid-fins-browser
+npm run test:deployment-browser
 npm run test:ship30-browser
 npm run test:ascent-browser
 npm run test:staging-browser
@@ -111,12 +120,14 @@ node scripts/verify-mission.mjs --visual-only
 node scripts/verify-overview.mjs --visual-only
 node scripts/verify-return.mjs --visual-only
 node scripts/verify-grid-fins.mjs --visual-only
+node scripts/verify-deployment.mjs --visual-only
 node scripts/verify-ship30.mjs --visual-only
 # WebKit
 node scripts/verify-mission.mjs --webkit
 node scripts/verify-overview.mjs --webkit
 node scripts/verify-return.mjs --webkit
 node scripts/verify-grid-fins.mjs --webkit
+node scripts/verify-deployment.mjs --webkit
 node scripts/verify-ship30.mjs --webkit
 ```
 

@@ -1,0 +1,29 @@
+.mission-workspace.deployment-workspace { --mission-cyan: #bee0b1; }
+.deployment-workspace .deployment-stage { background: #03070b; min-height: 330px; }
+.deployment-stage .mission-scene-tools { bottom: 34px; }
+.deployment-target { margin-right: auto; }
+.deployment-payloads { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid #3a4c52; background: #161f22; min-height: 59px; flex-shrink: 0; }
+.deployment-payloads > div { display: grid; grid-template-columns: 17px 1fr; align-content: center; gap: 4px 7px; padding: 9px 18px; font-size: 10px; }
+.deployment-payloads > div + div { border-left: 1px solid #304046; }
+.deployment-payloads svg { color: #abcfc9; grid-row: span 2; margin-top: 3px; }
+.deployment-payloads strong { color: #c7dbad; font-weight: 400; font-size: 10px; }
+.deployment-workspace .deployment-events { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.deployment-workspace .deployment-caption { height: 100px; }
+@media (max-width: 700px) {
+  .studio:has(.mission-workspace.deployment-workspace) { min-height: 980px; }
+  .deployment-workspace .mission-topbar h1 { font-size: 22px; }
+  .deployment-workspace .mission-picker select { max-width: 142px; }
+  .deployment-workspace .mission-viewbar { gap: 4px; }
+  .deployment-target { gap: 1px !important; }
+  .deployment-stage { min-height: 330px; }
+  .deployment-payloads > div { padding: 9px 8px; gap: 5px; font-size: 9px; }
+  .deployment-payloads strong { font-size: 9px; }
+  .deployment-workspace .deployment-caption { height: 123px; flex-direction: column; align-items: flex-start; gap: 7px; padding: 11px 14px; }
+  .deployment-caption > div { display: flex; align-items: baseline; gap: 12px; }
+  .deployment-caption h2 { margin: 0; }
+  .deployment-workspace .deployment-events { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .deployment-workspace .deployment-events button { min-height: 58px; grid-template-columns: 15px 1fr; }
+  .deployment-workspace .deployment-events strong { min-height: 0; }
+  .deployment-workspace .deployment-events small { grid-column: 2; }
+}
+@media (min-width: 701px) and (max-height: 900px) { .studio:has(.mission-workspace.deployment-workspace) { min-height: 880px; } }

@@ -19,6 +19,8 @@
     "test:capture": "node --experimental-strip-types --test scripts/capture.test.mjs",
     "test:grid-fins": "node --experimental-strip-types --test scripts/grid-fins.test.mjs",
     "test:grid-fins-browser": "node scripts/verify-grid-fins.mjs",
+    "test:deployment": "node --experimental-strip-types --test scripts/deployment.test.mjs",
+    "test:deployment-browser": "node scripts/verify-deployment.mjs",
     "test:geo": "node --experimental-strip-types --test scripts/mission-geo.test.mjs",
     "test:overview": "node scripts/verify-overview.mjs",
     "test:return": "node scripts/verify-return.mjs",
@@ -35,12 +37,14 @@
     "test:public": "node scripts/verify-public.mjs",
     "narration:plan": "node --experimental-strip-types scripts/export-narration.mjs",
     "narration:capture": "node --experimental-strip-types scripts/export-capture-narration.mjs",
-    "narration:overview": "node --experimental-strip-types scripts/export-overview-narration.mjs"
+    "narration:overview": "node --experimental-strip-types scripts/export-overview-narration.mjs",
+    "narration:deployment": "node --experimental-strip-types scripts/export-deployment-narration.mjs"
   },
   "dependencies": {
     "lucide-react": "1.31.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "satellite.js": "6.0.1",
     "suncalc": "1.9.0",
     "three": "0.159.0"
   },

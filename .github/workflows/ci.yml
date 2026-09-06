@@ -15,6 +15,7 @@ jobs:
       - run: npm run test:timeline
       - run: npm run test:capture
       - run: npm run test:grid-fins
+      - run: npm run test:deployment
       - run: npm run test:geo
       - run: npm run test:ship30
       - run: npm run test:ascent

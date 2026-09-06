@@ -9,6 +9,7 @@ const referencesAvailable = Boolean(import.meta.env.REFERENCE_ASSETS_AVAILABLE);
 const referencePdf = referencesAvailable ? '/references/faa-starship-reentry-2023.pdf#page=39' : 'https://www.faa.gov/media/27236#page=39';
 const MissionView = lazy(() => import('./MissionView'));
 const FlightOverview = lazy(() => import('./FlightOverview'));
+const DeploymentView = lazy(() => import('./DeploymentView'));
 const experienceFromHash = () => location.hash.startsWith('#mission') ? 'mission' : location.hash === '#launch' ? 'launch' : 'structure';
 
 function Tool({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: ReactNode }) {
@@ -18,6 +19,7 @@ function Tool({ label, active, onClick, children }: { label: string; active?: bo
 export default function App() {
   const [experience, setExperience] = useState<'structure' | 'launch' | 'mission'>(experienceFromHash);
   const [overview, setOverview] = useState(location.hash.startsWith('#mission/flight-5/overview'));
+  const [deployment, setDeployment] = useState(location.hash.startsWith('#mission/deployment'));
   const [mode, setMode] = useState<VehicleMode>('stack');
   const [selected, setSelected] = useState<PartId | null>(null);
   const [explode, setExplode] = useState(0);
@@ -37,7 +39,7 @@ export default function App() {
   const sourceDialog = useRef<HTMLDialogElement>(null);
   const part = parts.find(p => p.id === selected);
   useEffect(() => {
-    const sync = () => { setExperience(experienceFromHash()); setOverview(location.hash.startsWith('#mission/flight-5/overview')); };
+    const sync = () => { setExperience(experienceFromHash()); setOverview(location.hash.startsWith('#mission/flight-5/overview')); setDeployment(location.hash.startsWith('#mission/deployment')); };
     window.addEventListener('hashchange', sync); return () => window.removeEventListener('hashchange', sync);
   }, []);
   const filtered = parts.filter(p => (mode === 'stack' || p.stage === mode) && `${p.name} ${p.english}`.toLowerCase().includes(query.toLowerCase()));
@@ -56,7 +58,7 @@ export default function App() {
       <button className="source-button" onClick={() => sourceDialog.current?.showModal()}><FileText size={15}/><span>参考图纸</span><ArrowUpRight size={13}/></button>
     </header>
 
-    {experience === 'mission' ? <Suspense fallback={<p role="status">任务资料载入中…</p>}>{overview ? <FlightOverview onFullscreen={fullscreen}/> : <MissionView onFullscreen={fullscreen}/>}</Suspense> : experience === 'launch' ? <LaunchView onFullscreen={fullscreen}/> : engineOpen ? <EngineView onClose={()=>setEngineOpen(false)}/> : <><div className="workspace">
+    {experience === 'mission' ? <Suspense fallback={<p role="status">任务资料载入中…</p>}>{deployment ? <DeploymentView onFullscreen={fullscreen}/> : overview ? <FlightOverview onFullscreen={fullscreen}/> : <MissionView onFullscreen={fullscreen}/>}</Suspense> : experience === 'launch' ? <LaunchView onFullscreen={fullscreen}/> : engineOpen ? <EngineView onClose={()=>setEngineOpen(false)}/> : <><div className="workspace">
       <aside className={`catalog ${mobilePanel === 'parts' ? 'mobile-open' : ''}`} aria-label="部件目录">
         <div className="catalog-intro"><div className="eyebrow">SpaceX / 运载火箭研究</div><h1>星舰</h1><div className="vehicle-subtitle">星舰 · 超级重型运载系统</div><span className="version-badge"><span/> 第三代（V3）构型参考</span><button className="mobile-close tool" aria-label="关闭部件目录" onClick={() => setMobilePanel(null)}><X size={18}/></button></div>
         <div className="catalog-heading"><span>系统部件</span><span className="mono">{String(filtered.length).padStart(2, '0')}</span></div>
@@ -116,7 +118,7 @@ export default function App() {
       </aside>
     </div>
     <nav className="mobile-nav" aria-label="移动端面板"><button aria-pressed={mobilePanel === 'parts'} onClick={() => setMobilePanel(mobilePanel === 'parts' ? null : 'parts')}><Layers3 size={17}/>部件目录</button><button aria-pressed={mobilePanel === 'detail'} onClick={() => setMobilePanel(mobilePanel === 'detail' ? null : 'detail')}><FileText size={17}/>{part ? '部件详情' : '系统概览'}</button></nav></>}
-    <footer className="status-bar"><span><span className="status-dot"/> {experience === 'mission' ? '历史任务 · 视觉重建' : experience === 'launch' ? '发射过程示意' : ready ? '模型已就绪' : '模型载入中'}</span><span>SpaceX 星舰<span className="footer-separator">/</span>独立工程研究</span><span>资料核对 · 2026.09</span></footer>
+    <footer className="status-bar"><span><span className="status-dot"/> {experience === 'mission' ? deployment ? '卫星部署 · 独立概念' : '历史任务 · 视觉重建' : experience === 'launch' ? '发射过程示意' : ready ? '模型已就绪' : '模型载入中'}</span><span>SpaceX 星舰<span className="footer-separator">/</span>独立工程研究</span><span>资料核对 · 2026.09</span></footer>
     {notice && <div className="toast" role="status">{notice}</div>}
 
     <dialog ref={sourceDialog} className="sources-dialog" onClick={e => { if (e.target === sourceDialog.current) sourceDialog.current.close(); }}>
