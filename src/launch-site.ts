@@ -47,9 +47,15 @@ export function createLaunchSite(steel: THREE.Material, dark: THREE.Material, wh
     for (let i = 0; i < 5; i++) beam(pivot, [i * spec.length / 5, -.08, 0], [(i + 1) * spec.length / 5, -.85 * (1 - (i + 1) / 5), 0], .035);
     return { pivot, rail, side };
   });
-  function update(state: { armHeight: number; armOpening: number }) {
+  function update(state: { armHeight: number; armOpening: number; armTarget: { x: number; z: number; yaw: number } }) {
     carriage.position.y = state.armHeight;
-    for (const { pivot, side } of arms) pivot.rotation.y = -side * spec.openAngle * state.armOpening;
+    // Aim each hinge at its bearing point, not at a fixed global direction.
+    for (const { pivot, side } of arms) {
+      const x = state.armTarget.x + side * spec.halfGap * Math.sin(state.armTarget.yaw);
+      const z = state.armTarget.z + side * spec.halfGap * Math.cos(state.armTarget.yaw);
+      const heading = -Math.atan2(z - layout.z - pivot.position.z, x - layout.x - carriage.position.x);
+      pivot.rotation.y = heading - side * spec.openAngle * state.armOpening;
+    }
   }
   return { root, tower, mount, deck, supports, carriage, arms, update };
 }

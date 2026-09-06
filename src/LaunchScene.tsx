@@ -137,8 +137,8 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
         camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height); resetRequested = true;
       }
       const p = latest.current, state = launchState(p.time), t = state.time;
-      booster.position.set(state.booster.x, state.booster.y, state.booster.z); booster.rotation.z = state.booster.angle;
-      ship.position.set(state.ship.x, state.ship.y, state.ship.z); ship.rotation.z = state.ship.angle;
+      booster.position.set(state.booster.x, state.booster.y, state.booster.z); booster.rotation.set(0, state.booster.yaw, state.booster.angle, 'ZYX');
+      ship.position.set(state.ship.x, state.ship.y, state.ship.z); ship.rotation.set(0, state.ship.yaw, state.ship.angle, 'ZYX');
       site.update(state);
       const flutter = 1 + Math.sin(t * 39) * .025 + Math.sin(t * 63) * .018;
       boosterPlume.visible = state.boosterPower > .01; boosterPlume.scale.setScalar(Math.max(.001, state.boosterPower)); boosterPlume.scale.y *= flutter;

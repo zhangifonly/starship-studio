@@ -73,7 +73,7 @@ test('return corridor clears the mount and each catch pin seats on its own rail'
   for (const t of [82, 84, 86, 88, 89, 90, 166]) {
     const state = launchState(t), { booster } = state;
     site.update(state); site.root.updateMatrixWorld(true);
-    pins.position.set(booster.x, booster.y, booster.z); pins.rotation.z = booster.angle; pins.updateMatrixWorld(true);
+    pins.position.set(booster.x, booster.y, booster.z); pins.rotation.set(0, booster.yaw, booster.angle, 'ZYX'); pins.updateMatrixWorld(true);
     assert.equal(booster.z, launchSite.catch.z);
     assert.ok(Math.hypot(booster.x - launchSite.pad.x, booster.z - launchSite.pad.z) > launchSite.pad.radius + .49);
     for (let i = 0; i < 2; i++) {
@@ -92,15 +92,44 @@ test('catch hardware closes independently, continuously and reversibly', () => {
   site.update(launchState(82));
   assert.ok(site.arms[0].pivot.rotation.y > 0 && site.arms[1].pivot.rotation.y < 0);
   site.update(launchState(86));
-  assert.equal(Math.abs(site.arms[0].pivot.rotation.y), 0); assert.equal(Math.abs(site.arms[1].pivot.rotation.y), 0);
-  for (const t of [12, 24, 68, 76, 80, 82, 86, 89]) {
+  assert.ok(Math.abs(site.arms[0].pivot.rotation.y) < 1e-9); assert.ok(Math.abs(site.arms[1].pivot.rotation.y) < 1e-9);
+  for (const t of [1, 2, 5, 7, 12, 24, 26, 34, 44, 52, 68, 76, 80, 82, 86, 89]) {
     const before = launchState(t - .0001), after = launchState(t + .0001);
     assert.ok(Math.hypot(before.booster.x - after.booster.x, before.booster.y - after.booster.y, before.booster.z - after.booster.z) < .01);
     assert.ok(Math.abs(before.armHeight - after.armHeight) < .01);
     assert.ok(Math.abs(before.armOpening - after.armOpening) < .01);
+    assert.ok(Math.abs(before.booster.yaw - after.booster.yaw) < .01);
+    assert.ok(Math.abs(before.ship.yaw - after.ship.yaw) < .01);
   }
   site.update(launchState(0)); site.root.updateMatrixWorld(true);
   const start = site.arms.map(({ rail }) => rail.matrixWorld.toArray());
   for (const t of [89, 68, 166, 12, 0]) { site.update(launchState(t)); site.root.updateMatrixWorld(true); }
   assert.deepEqual(site.arms.map(({ rail }) => rail.matrixWorld.toArray()), start);
+});
+
+test('both pins have real rail contact at initial setup and after capture', () => {
+  for (const t of [0, 1, 89, 166]) {
+    const state = launchState(t), b = state.booster;
+    site.update(state); site.root.updateMatrixWorld(true);
+    pins.position.set(b.x, b.y, b.z); pins.rotation.set(0, b.yaw, b.angle, 'ZYX'); pins.updateMatrixWorld(true);
+    assert.equal(state.armOpening, 0);
+    for (let i = 0; i < 2; i++) {
+      let hits = 0;
+      for (const x of [-.06, 0, .06]) for (const z of [-.1, 0, .1]) {
+        const point = pins.children[i].localToWorld(new THREE.Vector3(x, -launchSite.catch.pinHeight / 2, z));
+        const ray = new THREE.Raycaster(point.clone().add(new THREE.Vector3(0, .1, 0)), new THREE.Vector3(0, -1, 0));
+        const hit = ray.intersectObject(site.arms[i].rail)[0];
+        if (hit && Math.abs(hit.point.y - point.y) < 1e-6) hits++;
+      }
+      assert.ok(hits >= 3, `pin ${i} has no bearing area at ${t}: ${hits}`);
+    }
+  }
+});
+test('initial supports unload before opening and release before ignition', () => {
+  assert.equal(launchState(0).armOpening, 0);
+  assert.ok(launchState(2).armHeight < launchState(0).armHeight - .15);
+  assert.equal(launchState(2).armOpening, 0);
+  assert.equal(launchState(5).armOpening, 1);
+  assert.equal(launchState(5).boosterPower, 0);
+  assert.equal(launchState(12).armOpening, 1);
 });

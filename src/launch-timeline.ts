@@ -1,4 +1,4 @@
-import { catchRailY, launchSite } from './launch-site-layout.ts';
+import { catchRailY, launchHeading, launchRailY, launchSite } from './launch-site-layout.ts';
 
 export const LAUNCH_DURATION = 166;
 export const EARTH_RADIUS = 700;
@@ -8,7 +8,7 @@ export const cameraModes: { id: CameraMode; name: string }[] = [
   { id: 'booster', name: '跟随助推器' }, { id: 'ground', name: '地面机位' }, { id: 'earth', name: '地球全景' },
 ];
 export const launchPhases = [
-  { start: 0, name: '发射准备', short: '准备', focus: '整箭', propulsion: '发动机未点火', description: '星舰与超级重型助推器完成发射前准备。此次演示综合展示飞行和回收流程，不对应某一次真实任务。', narration: '星舰即将出发，一起观察两级火箭的飞行与返回。' },
+  { start: 0, name: '发射准备', short: '准备', focus: '整箭', propulsion: '就位支承 / 双臂解锁', description: '开场从整箭就位支承开始，双臂随后卸载并张开，底部发射台继续支承整箭。这是压缩的装配至发射示意，不对应真实倒计时。', narration: '星舰即将出发，一起观察两级火箭的飞行与返回。' },
   { start: 6, name: '发动机点火', short: '点火', focus: '整箭', propulsion: '助推器点火', description: '助推器发动机启动，尾焰与导流区域的烟汽逐渐增强，整箭暂时保持在发射台上。', narration: '猛禽发动机启动，推力建立，即将离塔。' },
   { start: 12, name: '起飞离塔', short: '离塔', focus: '整箭', propulsion: '助推器持续工作', description: '整箭竖直上升，逐渐远离发射塔。发动机将推进剂的化学能转化为推动火箭上升的推力。', narration: '火箭起飞。超级重型助推器承担初始爬升任务，把星舰带向更高、更快的飞行状态。' },
   { start: 24, name: '上升转弯', short: '上升', focus: '整箭', propulsion: '助推器持续工作', description: '火箭逐步倾转，在上升的同时建立水平方向的速度。地球曲率和大气边缘逐渐进入视野。', narration: '飞行方向逐渐转向。火箭不仅需要飞得高，还需要获得足够的水平速度。此处的时间与航程经过压缩。' },
@@ -39,7 +39,7 @@ function sample(keys: Key[], time: number) {
   const a = keys[Math.max(0, next === -1 ? keys.length - 1 : next - 1)], b = keys[next === -1 ? keys.length - 1 : next];
   const f = a === b ? 0 : smooth((time - a[0]) / (b[0] - a[0]));
   const x = a[1] + (b[1] - a[1]) * f, altitude = a[2] + (b[2] - a[2]) * f;
-  return { x, y: seaLevel(x) + altitude, z: 0, altitude, angle: a[3] + (b[3] - a[3]) * f };
+  return { x, y: seaLevel(x) + altitude, z: 0, yaw: 0, altitude, angle: a[3] + (b[3] - a[3]) * f };
 }
 
 // The globe, vehicle and flight distances use different illustrative scales.
@@ -48,9 +48,11 @@ export function launchState(time: number) {
   const t = clamp(time, 0, LAUNCH_DURATION), booster = sample(boosterKeys, t);
   // Return to the catch corridor beside the mount, not onto the launch deck.
   booster.z = launchSite.pad.z + (launchSite.catch.z - launchSite.pad.z) * smooth((t - 68) / 12);
+  booster.yaw = launchHeading * (1 - smooth((t - 52) / 16));
   const separation = smooth((t - 42) / 8);
-  const attached = { x: booster.x + Math.sin(-booster.angle) * 7.35, y: booster.y + Math.cos(booster.angle) * 7.35, z: booster.z, altitude: booster.altitude + 7.35, angle: booster.angle };
+  const attached = { x: booster.x + Math.sin(-booster.angle) * 7.35, y: booster.y + Math.cos(booster.angle) * 7.35, z: booster.z, yaw: booster.yaw, altitude: booster.altitude + 7.35, angle: booster.angle };
   const independent = sample(shipKeys, Math.max(44, t));
+  independent.yaw = launchHeading * (1 - smooth((t - 44) / 8));
   const ship = t < 42 ? attached : t < 44 ? { ...attached, x: attached.x + smooth((t - 42) / 2) * .05, y: attached.y + smooth((t - 42) / 2) * .4 } : independent;
   const ascent = smooth((t - 6) / 2) * (1 - .9 * smooth((t - 40) / 3)) * (1 - smooth((t - 47) / 3));
   const boostback = smooth((t - 52) / 2) * (1 - smooth((t - 61) / 3)) * .55;
@@ -59,13 +61,18 @@ export function launchState(time: number) {
   const shipLanding = smooth((t - 138) / 2) * (1 - smooth((t - 153) / 2)) * .65;
   const focusShip = smooth((t - 91) / 5);
   const focusAltitude = t < 50 ? booster.altitude : booster.altitude * (1 - focusShip) + ship.altitude * focusShip;
+  const retarget = smooth((t - 26) / 8);
   return {
     time: t, phase: phaseAt(t), separation, ship, booster, focusShip,
     boosterPower: Math.max(ascent, boostback, landing), shipPower: Math.max(shipAscent, shipLanding),
     darkness: smooth((focusAltitude - 25) / 65),
     smoke: Math.max(smooth((t - 6) / 3) * (1 - smooth((t - 18) / 8)), smooth((t - 78) / 5) * (1 - smooth((t - 89) / 5)) * .65),
-    armOpening: 1 - smooth((t - 82) / 4),
-    armHeight: launchSite.arms.parkedY + (catchRailY - launchSite.arms.parkedY) * smooth((t - 68) / 8),
+    armOpening: smooth((t - 2) / 3) * (1 - smooth((t - 82) / 4)),
+    armHeight: launchRailY - .18 * smooth((t - 1) / 1)
+      + (launchSite.arms.parkedY - launchRailY + .18) * smooth((t - 5) / 2)
+      + (catchRailY - launchSite.arms.parkedY) * smooth((t - 68) / 8),
+    armTarget: { x: launchSite.pad.x + (launchSite.catch.x - launchSite.pad.x) * retarget,
+      z: launchSite.pad.z + (launchSite.catch.z - launchSite.pad.z) * retarget, yaw: launchHeading * (1 - retarget) },
     heating: smooth((t - 112) / 5) * (1 - smooth((t - 132) / 5)),
     splash: smooth((t - 153.5) / 1) * (1 - smooth((t - 159) / 6)),
     captured: t >= 89, landed: t >= 155,
