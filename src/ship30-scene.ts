@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { createShip30 } from './ship30-model';
-import { ship30Attitude, ship30Pose } from './ship30-state';
-import { guidePosition, shipGuide, type flight5State } from './flight5-timeline';
-import { ecefDirectionToEnu, enuBasis, geoToGlobe, geoToLocal, localToGeo, solarElevation, sunDirectionEcef } from './mission-geo';
+import { ship30Pose } from './ship30-state';
+import { ship30FlightFrame } from './ship30-flight';
+import { type flight5State } from './flight5-timeline';
+import { ecefDirectionToEnu, enuBasis, geoToGlobe, localToGeo, solarElevation, sunDirectionEcef } from './mission-geo';
 
 type State = ReturnType<typeof flight5State>;
 export function createShip30Scene(renderer: THREE.WebGLRenderer) {
@@ -42,6 +43,20 @@ export function createShip30Scene(renderer: THREE.WebGLRenderer) {
     const flame = new THREE.Mesh(new THREE.CylinderGeometry(.06, .19, 3.8, 24, 12, true), plumeMaterial);
     flame.position.copy(engine.position).add(new THREE.Vector3(0, -1.9, 0)); plumes.add(flame);
   }
+  const ascentMaterial = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide,
+    uniforms: { time: { value: 0 }, power: { value: 0 } },
+    vertexShader: 'varying vec2 p;void main(){p=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader: `uniform float time;uniform float power;varying vec2 p;
+      void main(){float end=smoothstep(0.,.32,p.y);float waves=.72+.1*sin(p.y*46.-time*24.);
+      vec3 color=mix(vec3(.46,.59,.92),vec3(.84,.9,1.),p.y);
+      gl_FragColor=vec4(color,end*waves*power*.32);}`,
+  });
+  const ascentPlumes = new THREE.Group(); ascentPlumes.name = 'six-engine-ascent-plumes'; ship.root.add(ascentPlumes);
+  for (const engine of ship.engines) {
+    const length = engine.vacuum ? 5.5 : 4;
+    const flame = new THREE.Mesh(new THREE.CylinderGeometry(engine.vacuum ? .135 : .065, engine.vacuum ? .85 : .48, length, 24, 16, true), ascentMaterial);
+    flame.position.copy(engine.position).add(new THREE.Vector3(0, -length / 2, 0)); ascentPlumes.add(flame);
+  }
   const waterMaterial = new THREE.ShaderMaterial({
     uniforms: { time: { value: 0 }, opacity: { value: 0 }, night: { value: 1 }, sky: { value: sky } }, transparent: true,
     vertexShader: 'varying vec3 world;void main(){world=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(world,1.);}',
@@ -65,10 +80,8 @@ export function createShip30Scene(renderer: THREE.WebGLRenderer) {
     const pose = ship30Pose(state.seconds), origin = state.ship;
     // Rebase at the very same global vehicle datum every frame. Geometry and
     // camera stay near zero even on the opposite side of Earth from Starbase.
-    const sample = Math.min(3850, Math.max(567, state.seconds));
-    const before = geoToLocal(guidePosition(shipGuide, sample - 60), origin), after = geoToLocal(guidePosition(shipGuide, sample + 60), origin);
-    course.set(after.x - before.x, 0, after.z - before.z).normalize();
-    ship.root.quaternion.copy(ship30Attitude(pose.pitch, course));
+    const flight = ship30FlightFrame(state.seconds, origin); course.copy(flight.course);
+    ship.root.quaternion.copy(flight.quaternion);
     for (const flap of ship.flaps) flap.hinge.rotation.y = flap.side * pose.flap * (flap.forward ? .8 : 1);
     plasma.visible = sparks.visible = pose.heat > .001; plasmaMaterial.uniforms.time.value = pose.seconds; plasmaMaterial.uniforms.heat.value = pose.heat;
     ship.tileMaterial.emissive.set('#b9340b'); ship.tileMaterial.emissiveIntensity = pose.heat * .015; glow.intensity = pose.heat * .7;
@@ -79,12 +92,13 @@ export function createShip30Scene(renderer: THREE.WebGLRenderer) {
     }
     sparksGeometry.attributes.position.needsUpdate = true; sparksMaterial.opacity = pose.heat * .08;
     plumes.visible = pose.power > .001; plumeMaterial.uniforms.time.value = pose.seconds; plumeMaterial.uniforms.power.value = pose.power;
+    ascentPlumes.visible = pose.ascentPower > .001; ascentMaterial.uniforms.time.value = pose.seconds; ascentMaterial.uniforms.power.value = pose.ascentPower;
     plumeMaterial.uniforms.seaY.value = -origin.altitudeM / 10;
-    target.set(0, 2.5, 0).applyQuaternion(ship.root.quaternion);
+    target.set(0, 2.5 - 2.5 * pose.ascentPower, 0).applyQuaternion(ship.root.quaternion);
     const offset = mode === 'ship-heat'
       ? new THREE.Vector3(3.5, .3, 12).applyQuaternion(ship.root.quaternion)
       : new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), course).multiplyScalar(10).addScaledVector(course, -5).add(new THREE.Vector3(0, 4, 0));
-    offset.multiplyScalar(zoom * Math.max(1, .95 / aspect));
+    offset.multiplyScalar(zoom * Math.max(1, .95 / aspect) * (1 + .65 * pose.ascentPower));
     camera.position.copy(target).add(offset); camera.position.y = Math.max(-origin.altitudeM / 10 + 1.5, camera.position.y);
     camera.up.set(0, 1, 0); camera.aspect = aspect; camera.lookAt(target); camera.updateProjectionMatrix();
     const observer = localToGeo(camera.position, origin), globalPosition = geoToGlobe(observer), globalTarget = geoToGlobe(localToGeo(target, origin)), basis = enuBasis(origin);
@@ -99,7 +113,11 @@ export function createShip30Scene(renderer: THREE.WebGLRenderer) {
     water.position.y = -origin.altitudeM / 10; waterMaterial.uniforms.time.value = pose.seconds; waterMaterial.uniforms.night.value = night;
     waterMaterial.uniforms.opacity.value = 1 - THREE.MathUtils.smoothstep(origin.altitudeM, 3000, 16000); water.visible = origin.altitudeM < 16000;
     contact.visible = pose.splash; contact.position.set(0, water.position.y + .005, 0);
-    return { sky, earthFog, pose, course: course.toArray(), quaternion: ship.root.quaternion.toArray(), local: ship.root.position.toArray(), cameraPosition: camera.position.toArray(), tileCount: ship.tiles.count, engineCount: ship.engines.length };
+    camera.updateMatrixWorld(true);
+    const envelope = [-5.5 * pose.ascentPower, 5.03].flatMap(y => [-.95, .95].flatMap(x => [-.85, .85].map(z => {
+      const p = new THREE.Vector3(x, y, z).applyQuaternion(ship.root.quaternion).project(camera); return [(p.x + 1) / 2, (1 - p.y) / 2];
+    })));
+    return { sky, earthFog, pose, envelope, course: course.toArray(), quaternion: ship.root.quaternion.toArray(), local: ship.root.position.toArray(), cameraPosition: camera.position.toArray(), tileCount: ship.tiles.count, engineCount: ship.engines.length };
   }
   return { scene, camera, earthCamera, update, dispose() {
     const geometries = new Set<THREE.BufferGeometry>(), materials = new Set<THREE.Material>();

@@ -5,6 +5,7 @@ import { ship30Pose, ship30Attitude, shipCameraAvailable, SHIP30_HEIGHT, SHIP30_
 import { createShip30 } from '../src/ship30-model.ts';
 import { flight5State, overviewHash, parseOverviewHash, shipPositionAt } from '../src/flight5-timeline.ts';
 import { localToGeo, geoToLocal } from '../src/mission-geo.ts';
+import { ship30FlightFrame } from '../src/ship30-flight.ts';
 
 test('S30 authored poses are bounded, seek-safe and continuous', () => {
   for (let t = 507; t <= 3940; t += .25) {
@@ -21,7 +22,8 @@ test('S30 authored poses are bounded, seek-safe and continuous', () => {
   assert.deepEqual(ship30Pose(Infinity), ship30Pose(0));
 });
 test('coast and atmospheric entry are unpowered, landing uses its own envelope', () => {
-  assert.equal(shipCameraAvailable(506.9), false); assert.equal(shipCameraAvailable(507), true);
+  assert.equal(shipCameraAvailable(222.9), false); assert.equal(shipCameraAvailable(223), true);
+  assert.equal(shipCameraAvailable(Infinity), false);
   for (const t of [507, 1400, 2883, 3200, 3770, 3915]) assert.equal(ship30Pose(t).power, 0);
   assert.ok(ship30Pose(3200).heat > .9); assert.equal(ship30Pose(3915).heat, 0);
   assert.ok(ship30Pose(3920).power > .9); assert.equal(ship30Pose(3940).power, 0);
@@ -72,4 +74,27 @@ test('terminal descent decelerates to the surface and stays continuous at both e
   }
   for (const t of [3915, 3940]) assert.ok(Math.abs(shipPositionAt(t - .0001).altitudeM - shipPositionAt(t + .0001).altitudeM) < .1);
   assert.equal(shipPositionAt(3940).altitudeM, 0); assert.deepEqual(shipPositionAt(4000), shipPositionAt(3940));
+});
+
+test('six-engine ascent and landing envelopes never overlap and shut down continuously', () => {
+  for (let t = 223; t < 503; t += .1) { assert.equal(ship30Pose(t).ascentPower, 1); assert.equal(ship30Pose(t).power, 0); assert.equal(ship30Pose(t).heat, 0); }
+  let previous = 1;
+  for (let t = 503; t <= 507; t += .01) { const p = ship30Pose(t).ascentPower; assert.ok(p <= previous && p >= 0); previous = p; }
+  for (const t of [507, 1400, 3200, 3920, 3940]) assert.equal(ship30Pose(t).ascentPower, 0);
+  for (const t of [503, 507]) assert.ok(Math.abs(ship30Pose(t - .001).ascentPower - ship30Pose(t + .001).ascentPower) < 1e-5);
+});
+test('powered-flight attitude is normalized, reversible and joins the unchanged coast frame', () => {
+  let previous;
+  for (let t = 223; t <= 510; t += .25) {
+    const frame = ship30FlightFrame(t, shipPositionAt(t));
+    assert.ok(Math.abs(frame.quaternion.length() - 1) < 1e-12);
+    if (previous) assert.ok(frame.quaternion.angleTo(previous) < .01);
+    previous = frame.quaternion;
+  }
+  for (const t of [507, 1400, 2883, 3200, 3920, 3940]) {
+    const frame = ship30FlightFrame(t, shipPositionAt(t));
+    assert.deepEqual(frame.quaternion, ship30Attitude(ship30Pose(t).pitch, frame.course));
+  }
+  const frame = ship30FlightFrame(350, shipPositionAt(350)); ship30FlightFrame(3940, shipPositionAt(3940));
+  assert.deepEqual(ship30FlightFrame(350, shipPositionAt(350)), frame);
 });

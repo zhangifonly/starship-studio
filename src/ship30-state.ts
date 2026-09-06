@@ -3,7 +3,7 @@ import type { XYZ } from './mission-geo.ts';
 
 export const SHIP30_HEIGHT = 5.03;
 export const SHIP30_RADIUS = .45;
-export const shipCameraAvailable = (seconds: number) => seconds >= 507;
+export const shipCameraAvailable = (seconds: number) => Number.isFinite(seconds) && seconds >= 223;
 const clamp = (x: number) => Math.max(0, Math.min(1, x));
 const smooth = (x: number) => { const t = clamp(x); return t * t * (3 - 2 * t); };
 
@@ -15,9 +15,10 @@ export function ship30Pose(seconds: number) {
   const pitch = ((12 + 28 * entry) * (1 - descent) * (1 - flip) + 90 * flip) * Math.PI / 180;
   const heat = smooth((t - 2800) / 320) * (1 - smooth((t - 3370) / 400));
   const power = smooth((t - 3915) / 2) * (1 - smooth((t - 3937) / 3));
+  const ascentPower = smooth((t - 159) / 1) * (1 - smooth((t - 503) / 4));
   const flap = (.16 + .20 * entry + .25 * descent) * (1 - flip) + .16 * flip;
-  return { seconds: t, pitch, heat, power, flap, splash: t >= 3940,
-    phase: t >= 3940 ? '入水瞬间' : t >= 3915 ? '翻转减速' : t >= 3770 ? '腹部下降' : t >= 2800 ? '再入重建' : '亚轨道滑行' };
+  return { seconds: t, pitch, heat, power, ascentPower, flap, splash: t >= 3940,
+    phase: t >= 3940 ? '入水瞬间' : t >= 3915 ? '翻转减速' : t >= 3770 ? '腹部下降' : t >= 2800 ? '再入重建' : t >= 507 ? '亚轨道滑行' : t >= 503 ? '上升关机过渡' : '六机动力飞行' };
 }
 
 export function ship30Attitude(pitch: number, course: XYZ) {

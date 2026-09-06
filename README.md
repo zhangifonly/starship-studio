@@ -48,6 +48,7 @@ npm run dev
 - B12 抛环后的返回近景与固定地面长焦；共享全球坐标、捕获末段及 S30 地球小视窗。
 - B12 + S30 起飞与热分离的伴飞、固定地面长焦、分离环观察；先垂直离塔，再点火分离，全球与近景共用含叠装偏移的示意轨迹。
 - S30 第一代伴飞/热盾双视角：关机后滑行、再入、翻转减速与入水定格，不混入 V3 或海上平台。
+- S30 近景提前至约 T+03:43：六机动力段、独立高空尾焰与约 T+08:27 关机过渡，随后接入原滑行和再入。
 - WGS84 地球、基于近似任务 UTC 的太阳方位；明确区分计划时间和飞后记录。
 
 历史复盘中的 00:00-00:35 是片段时间，不是发射后 T+ 遥测。模型坐标、
@@ -113,6 +114,7 @@ npm run test:return
 npm run test:grid-fins-browser
 npm run test:deployment-browser
 npm run test:ship30-browser
+node scripts/verify-ship30.mjs --powered
 npm run test:ascent-browser
 npm run test:staging-browser
 # 无生成音频的干净克隆
@@ -122,6 +124,7 @@ node scripts/verify-return.mjs --visual-only
 node scripts/verify-grid-fins.mjs --visual-only
 node scripts/verify-deployment.mjs --visual-only
 node scripts/verify-ship30.mjs --visual-only
+node scripts/verify-ship30.mjs --powered --visual-only
 # WebKit
 node scripts/verify-mission.mjs --webkit
 node scripts/verify-overview.mjs --webkit
@@ -129,6 +132,7 @@ node scripts/verify-return.mjs --webkit
 node scripts/verify-grid-fins.mjs --webkit
 node scripts/verify-deployment.mjs --webkit
 node scripts/verify-ship30.mjs --webkit
+node scripts/verify-ship30.mjs --powered --webkit
 ```
 
 浏览器测试检查实际画面像素、交互、移动端布局与音频播放状态。
