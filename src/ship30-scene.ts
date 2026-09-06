@@ -98,7 +98,7 @@ export function createShip30Scene(renderer: THREE.WebGLRenderer) {
     const offset = mode === 'ship-heat'
       ? new THREE.Vector3(3.5, .3, 12).applyQuaternion(ship.root.quaternion)
       : new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), course).multiplyScalar(10).addScaledVector(course, -5).add(new THREE.Vector3(0, 4, 0));
-    offset.multiplyScalar(zoom * Math.max(1, .95 / aspect) * (1 + .65 * pose.ascentPower));
+    offset.multiplyScalar(zoom * Math.max(1, (.95 + .15 * pose.ascentPower) / aspect) * (1 + .65 * pose.ascentPower));
     camera.position.copy(target).add(offset); camera.position.y = Math.max(-origin.altitudeM / 10 + 1.5, camera.position.y);
     camera.up.set(0, 1, 0); camera.aspect = aspect; camera.lookAt(target); camera.updateProjectionMatrix();
     const observer = localToGeo(camera.position, origin), globalPosition = geoToGlobe(observer), globalTarget = geoToGlobe(localToGeo(target, origin)), basis = enuBasis(origin);
