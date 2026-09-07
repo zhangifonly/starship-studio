@@ -69,19 +69,26 @@ try {
   await expect(canvas).toHaveAttribute('data-captured', 'false');
   await expect(canvas).toHaveAttribute('data-landed', 'false');
   expect(Buffer.compare(initial, await canvas.screenshot())).toBe(0);
+  const narration = page.getByRole('button', { name: '中文语音解说', exact: true });
+  const narrationEnabled = await narration.getAttribute('aria-pressed') === 'true';
+  if (narrationEnabled) await narration.click();
+  const clockSample = () => page.evaluate(() => ({ wall: performance.now(), time: Number(document.querySelector('input[aria-label="发射演示进度"]').value) }));
   for (const rate of ['0.5', '2']) {
     await seek(10);
     await page.getByRole('combobox', { name: '发射演示播放速度' }).selectOption(rate);
-    const started = await page.evaluate(() => performance.now());
     await page.getByRole('button', { name: '播放发射演示', exact: true }).click();
-    await page.waitForTimeout(1000);
+    // Measure only actual playback, excluding actionability waits and TTS buffering.
+    const started = await clockSample();
+    await page.waitForTimeout(2000);
+    const ended = await clockSample();
     await page.getByRole('button', { name: '暂停发射演示', exact: true }).click();
-    const elapsed = Number(await slider.inputValue()) - 10;
-    const wallSeconds = ((await page.evaluate(() => performance.now())) - started) / 1000;
+    const elapsed = ended.time - started.time;
+    const wallSeconds = (ended.wall - started.wall) / 1000;
     expect(elapsed / wallSeconds).toBeGreaterThan(Number(rate) * .5);
     expect(elapsed / wallSeconds).toBeLessThan(Number(rate) * 1.3);
     report.push({ test: `playback ${rate}x`, elapsed });
   }
+  if (narrationEnabled) await narration.click();
   await page.getByRole('button', { name: '跳转到热分离', exact: true }).click();
   await expect(page.getByTestId('launch-phase-title')).toHaveText('热分离');
   await expect(slider).toHaveValue('40');

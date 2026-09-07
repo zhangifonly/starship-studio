@@ -3,6 +3,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { createCaptureBooster } from './capture-model';
 import { createShip30 } from './ship30-model';
 import { createLaunchSite } from './launch-site';
+import { createPadSteam } from './pad-steam';
 import { ascentSite, stagingCameraAvailable, ASCENT_SHIP_Y, ASCENT_RING_BOTTOM, ASCENT_RING_TOP } from './ascent-layout';
 import { ascentObserver, ascentPose } from './ascent-state';
 import { STARBASE, type flight5State } from './flight5-timeline';
@@ -80,17 +81,7 @@ export function createAscentScene(renderer: THREE.WebGLRenderer) {
     jet.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction); ventJets.add(jet);
   }
   const interstageLight = new THREE.PointLight('#ffb06a', 0, 3); interstageLight.position.y = 7.05; stack.add(interstageLight);
-  const vaporMaterial = new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
-    uniforms: { opacity: { value: .3 }, time: { value: 0 } },
-    vertexShader: `varying vec2 p;void main(){p=uv*2.-1.;vec4 center=modelViewMatrix*instanceMatrix*vec4(0.,0.,0.,1.);
-      center.xy+=position.xy*vec2(length(instanceMatrix[0].xyz),length(instanceMatrix[1].xyz));gl_Position=projectionMatrix*center;}`,
-    fragmentShader: `uniform float opacity;uniform float time;varying vec2 p;
-      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-      float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+1.),f.x),f.y);}
-      void main(){float n=.55*noise(p*3.+time*.1)+.3*noise(p*7.-time*.13)+.15*noise(p*16.);
-      float a=pow(max(0.,1.-dot(p,p)),2.)*smoothstep(.15,.75,n);gl_FragColor=vec4(mix(vec3(.55,.63,.65),vec3(.91,.94,.94),n),a*opacity);}`,
-  });
-  const vapor = new THREE.InstancedMesh(new THREE.PlaneGeometry(2, 2), vaporMaterial, 36); vapor.frustumCulled = false; scene.add(vapor);
+  const steam = createPadSteam(ascentSite.pad); scene.add(steam.mesh);
   const target = new THREE.Vector3();
   function update(state: ReturnType<typeof flight5State>, mode: 'ascent' | 'ascent-ground' | 'staging', aspect: number, zoom: number) {
     const pose = ascentPose(state.seconds), t = pose.seconds;
@@ -106,13 +97,6 @@ export function createAscentScene(renderer: THREE.WebGLRenderer) {
     plumeMaterial.uniforms.time.value = outerMaterial.uniforms.time.value = t;
     outerMaterial.uniforms.power.value = pose.outerPower;
     for (const { mesh, outer } of flames) { mesh.visible = !outer || t < 159; mesh.position.y = .18 - length / 2; mesh.scale.set(expansion, length, expansion); }
-    vapor.visible = t < 22; vaporMaterial.uniforms.opacity.value = .5 * (1 - THREE.MathUtils.smoothstep(t, 8, 22)); vaporMaterial.uniforms.time.value = t;
-    for (let i = 0; i < 36; i++) {
-      const a = i * 2.399963, distance = 1 + (i % 9) * .35 + t * .35;
-      dummy.position.set(ascentSite.pad.x + Math.cos(a) * distance, .2 + (i % 4) * .22, ascentSite.pad.z + Math.sin(a) * distance);
-      dummy.rotation.set(0, a, 0); dummy.scale.set(2.3 + t * .1, .9 + (i % 5) * .24, 1); dummy.updateMatrix(); vapor.setMatrixAt(i, dummy.matrix);
-    }
-    vapor.instanceMatrix.needsUpdate = true;
     const detail = mode === 'staging' && stagingCameraAvailable(t);
     target.set(0, (detail ? 7.04 : 5.5) + pose.gap / 2, 0).applyQuaternion(stack.quaternion).add(stack.position);
     camera.aspect = aspect; camera.up.set(0, 1, 0);
@@ -145,6 +129,7 @@ export function createAscentScene(renderer: THREE.WebGLRenderer) {
     earthFog.color.copy(sky); earthFog.far = .003 + Math.pow(Math.max(0, observer.altitudeM) / 12000, 2);
     site.root.visible = terrain.visible = state.booster.altitudeM < 6000;
     camera.updateMatrixWorld(true);
+    steam.update(t + 5, camera);
     const nose = new THREE.Vector3(0, ASCENT_SHIP_Y + 5.03 + pose.gap, 0).applyQuaternion(stack.quaternion).add(stack.position).project(camera);
     const collar = new THREE.Vector3(0, 7.04, 0).applyQuaternion(stack.quaternion).add(stack.position).project(camera);
     return { sky, earthFog, finAngles, local: pose.local, shipLocal: pose.shipLocal, gap: pose.gap, shipPower: pose.shipPower, ventPower: pose.ventPower, detail, collar: [(collar.x + 1) / 2, (1 - collar.y) / 2], quaternion: stack.quaternion.toArray(), cameraPosition: camera.position.toArray(), nose: [(nose.x + 1) / 2, (1 - nose.y) / 2], fov: camera.fov, engines: t < 159 ? 33 : 3, ring: true };

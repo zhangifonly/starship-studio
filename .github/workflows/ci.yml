@@ -20,4 +20,5 @@ jobs:
       - run: npm run test:ship30
       - run: npm run test:ascent
       - run: npm run test:staging
+      - run: npm run test:steam
       - run: npm run build

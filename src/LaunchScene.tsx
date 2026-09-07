@@ -9,6 +9,8 @@ import { createEarthWorld } from './earth-world';
 import { createCatchPins, createLaunchSite } from './launch-site';
 import { createLandingLegs } from './landing-platform';
 import { landingSite, landingSitePoint } from './landing-site-layout';
+import { launchSite } from './launch-site-layout';
+import { createPadSteam } from './pad-steam';
 
 export type LaunchSceneHandle = { reset: () => void; zoom: (factor: number) => void };
 type Props = { time: number; following: boolean; cameraMode: CameraMode; onReady: () => void; onError: () => void; onOrbit: () => void };
@@ -134,6 +136,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
     const fog = new THREE.FogExp2(normalSky, .003); scene.fog = fog;
     const groundMaterials = new Set<THREE.Material>();
     ground.traverse(o => { if (o instanceof THREE.Mesh && o !== smoke) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { m.transparent = true; groundMaterials.add(m); }); });
+    const steam = createPadSteam(launchSite.pad); ground.add(steam.mesh);
     api.current = { reset() { resetRequested = true; zoom = 1; }, zoom(f) { zoom = THREE.MathUtils.clamp(zoom * f, .6, 2.2); if (!latest.current.following) camera.position.sub(controls.target).multiplyScalar(f).add(controls.target); } };
     const observer = new ResizeObserver(() => {
       pendingWidth = el.clientWidth; pendingHeight = el.clientHeight;
@@ -171,7 +174,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
         dummy.scale.setScalar(.5 + Math.sin(age * Math.PI)); dummy.updateMatrix(); spray.setMatrixAt(i, dummy.matrix);
       }
       spray.instanceMatrix.needsUpdate = true; wake.scale.set(3.4 + splashAge * .12, 5.5 + splashAge * .12, 1);
-      smoke.visible = state.smoke > .005; smokeMaterial.opacity = state.smoke * .45;
+      smoke.visible = t >= 68 && state.smoke > .005; smokeMaterial.opacity = state.smoke * .45;
       dummy.quaternion.copy(camera.quaternion);
       for (let i = 0; i < 70; i++) {
         const age = ((Math.max(0, t - 5) * .19 + i / 70) % 1), a = i * 2.39996;
@@ -236,6 +239,7 @@ export default forwardRef<LaunchSceneHandle, Props>(function LaunchScene(props, 
       paths.visible = shipMarker.visible = boosterMarker.visible = globeView;
       shipMarker.position.copy(shipTarget); boosterMarker.position.copy(boosterTarget);
       if (p.following || resetRequested) { controls.target.copy(target); camera.position.copy(desiredPosition); controls.update(); }
+      renderer.domElement.dataset.steam = String(steam.update((t - 6) * 2, camera));
       renderer.domElement.dataset.phase = String(state.phase); renderer.domElement.dataset.time = t.toFixed(2);
       renderer.domElement.dataset.separated = String(state.separation > .01);
       renderer.domElement.dataset.captured = String(state.captured); renderer.domElement.dataset.landed = String(state.landed);
