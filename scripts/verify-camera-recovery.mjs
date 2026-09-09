@@ -1,10 +1,10 @@
 import { chromium, webkit, expect } from '@playwright/test';
 
 const base = process.env.STARSHIP_TEST_URL || 'http://127.0.0.1:3018';
-for (const engine of [chromium, webkit]) {
+for (const engine of process.argv.includes('--webkit') ? [webkit] : [chromium, webkit]) {
   const browser = await engine.launch();
   try {
-    for (const width of [1440, 390]) {
+    for (const width of process.argv.includes('--mobile') ? [390] : [1440, 390]) {
       const page = await browser.newPage({ viewport: { width, height: 900 }, hasTouch: true, isMobile: width < 700 });
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
@@ -42,11 +42,11 @@ for (const engine of [chromium, webkit]) {
         const original = await pixels();
         for (const touch of [false, true]) {
           await drag(touch);
-          if (!touch || engine === chromium) expect(await pixels()).not.toBe(original);
+          if (!touch || engine === chromium) await expect.poll(async () => (await pixels()) !== original).toBe(true);
           await select.selectOption(mode);
           await expect(follow).toBeChecked();
           await expect(select).toHaveValue(mode);
-          await expect.poll(pixels).toBe(original);
+          await expect.poll(async () => (await pixels()) === original).toBe(true);
           await expect(canvas).toHaveAttribute('data-time', '18.00');
           await expect(canvas).toHaveAttribute('data-identity', 'persistent');
         }
